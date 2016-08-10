@@ -6,6 +6,7 @@ import subprocess
 import tarfile
 import tempfile
 import zipfile
+import hashlib
 
 import numpy as np
 import requests
@@ -115,3 +116,8 @@ def robust_literal_eval(val):
         return ast.literal_eval(val)
     except ValueError:
         return val
+
+
+def secure_filename(filename):
+    filename = filename.encode('utf-8')
+    return hashlib.sha256(filename).hexdigest()[:20]
