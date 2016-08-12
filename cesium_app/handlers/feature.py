@@ -1,3 +1,8 @@
+import tornado.ioloop
+
+import xarray as xr
+from cesium import featurize, time_series
+
 from .base import BaseHandler, AccessError
 from ..models import Dataset, Featureset, Project, File
 from ..config import cfg
@@ -6,22 +11,15 @@ from os.path import join as pjoin
 import uuid
 
 
-# XXX TODO XXX This will no longer be necessary
-def featurize_and_notify(username, fset_id, ts_paths, features_to_use,
-                         fset_path, custom_features_script=None):
-    import requests
-
-    payload = {'type': 'featurize',
-               'params': {'ts_paths': ts_paths,
-                          'features_to_use': features_to_use,
-                          'output_path': fset_path},
-               'metadata': {'fset_id': fset_id, 'username': username}}
-    result = requests.post('http://127.0.0.1:63000/task',
-                           json=payload).json()
-    if result['status'] == 'success':
-        return result['data']['task_id']
-    else:
-        raise RuntimeError("Featurization failed: {}".format(result['message']))
+def featurize_task(executor, ts_paths, features_to_use, output_path,
+                   custom_script_path=None):
+    all_time_series = executor.map(time_series.from_netcdf, ts_paths)
+    all_features = executor.map(featurize.featurize_single_ts, all_time_series,
+                                features_to_use=features_to_use,
+                                custom_script_path=custom_script_path)
+    fset = executor.submit(featurize.assemble_featureset, all_features,
+                           all_time_series)
+    return executor.submit(xr.Dataset.to_netcdf, fset, output_path)
 
 
 class FeatureHandler(BaseHandler):
@@ -47,6 +45,7 @@ class FeatureHandler(BaseHandler):
         self.success(featureset_info)
 
 
+    @tornado.gen.coroutine
     def post(self):
         data = self.get_json()
         featureset_name = data.get('featuresetName', '')
@@ -59,6 +58,7 @@ class FeatureHandler(BaseHandler):
         features_to_use = [fname for (ftype, fname) in feat_type_name]
 
         custom_feats_code = data['customFeatsCode'].strip()
+        custom_script_path = None
 
         fset_path = pjoin(cfg['paths']['features_folder'],
                           '{}_featureset.nc'.format(uuid.uuid4()))
@@ -70,10 +70,33 @@ class FeatureHandler(BaseHandler):
                                  project=dataset.project,
                                  features_list=features_to_use,
                                  custom_features_script=None)
-        res = featurize_and_notify(self.get_username(), fset.id, dataset.uris,
-                                   features_to_use, fset_path,
-                                   custom_features_script=None).apply_async()
-        fset.task_id = res.task_id
+
+        loop = tornado.ioloop.IOLoop.current()
+
+        from distributed import Scheduler
+        IP = '127.0.0.1'
+        PORT = 63000
+        PORT_SCHEDULER = 63500
+        from distributed import Executor
+        executor = Executor('{}:{}'.format(IP, PORT_SCHEDULER), loop=loop,
+                            start=False)
+        loop.add_future(executor._start(), None)
+
+        s = Scheduler(loop=loop)
+        s.start(PORT_SCHEDULER)
+        print('Task scheduler listening on port {}'.format(PORT_SCHEDULER))
+
+        from distributed import Worker
+        w = Worker('127.0.0.1', PORT_SCHEDULER, loop=loop)
+        w.start(0)
+        print('Single worker activated')
+        loop.start()
+
+        future = featurize_task(executor, dataset.uris, features_to_use,
+                                fset_path, custom_script_path)
+        loop.spawn_callback(report_result, future, task_data['metadata'])
+
+        fset.task_id = future.key
         fset.save()
 
         self.success(fset, 'cesium/FETCH_FEATURESETS')
