@@ -1,12 +1,66 @@
-@app.route('/models', methods=['POST', 'GET'])
-@app.route('/models/<model_id>', methods=['GET', 'PUT', 'DELETE'])
-@exception_as_error
-def Models(model_id=None):
-    """
-    """
-    # TODO: ADD MORE ROBUST EXCEPTION HANDLING (HERE AND ALL OTHER FUNCTIONS)
-    if request.method == 'POST':
-        data = request.get_json()
+from .base import BaseHandler, AccessError
+from ..models import Project, Model, Featureset, File
+from ..ext.sklearn_models import (
+    model_descriptions as sklearn_model_descriptions,
+    check_model_param_types
+    )
+from ..util import robust_literal_eval
+from ..config import cfg
+
+from os.path import join as pjoin
+import uuid
+import datetime
+
+from cesium import build_model
+import tornado.ioloop
+from sklearn.externals import joblib
+import xarray as xr
+
+
+class ModelHandler(BaseHandler):
+    def _get_model(self, model_id):
+        try:
+            m = Model.get(Model.id == model_id)
+        except Model.DoesNotExist:
+            raise AccessError('No such model')
+
+        if not m.is_owned_by(self.get_username()):
+            raise AccessError('No such project')
+
+        return m
+
+    def get(self, model_id=None):
+        if model_id is not None:
+            model_info = self._get_model(model_id)
+        else:
+            model_info = [model for p in Project.all(self.get_username())
+                          for model in p.models]
+
+        return self.success(model_info)
+
+    @tornado.gen.coroutine
+    def _await_model(self, future, model):
+        try:
+            result = yield future._result()
+
+            model.task_id = None
+            model.finished = datetime.datetime.now()
+            model.save()
+
+            self.action('cesium/SHOW_NOTIFICATION',
+                        payload={"note": "Model '{}' computed.".format(model.name)})
+
+            self.action('cesium/FETCH_MODELS')
+
+        except Exception as e:
+            model.delete_instance()
+            self.action('cesium/SHOW_NOTIFICATION',
+                        payload={"note": "Cannot create model '{}': {}".format(model.name, e),
+                                 "type": 'error'})
+
+    @tornado.gen.coroutine
+    def post(self):
+        data = self.get_json()
 
         model_name = data.pop('modelName')
         featureset_id = data.pop('featureSet')
@@ -14,59 +68,52 @@ def Models(model_id=None):
         model_type = sklearn_model_descriptions[int(data.pop('modelType'))]['name']
         project_id = data.pop('project')
 
-        fset = m.Featureset.get(m.Featureset.id == featureset_id)
+        fset = Featureset.get(Featureset.id == featureset_id)
+        if not fset.is_owned_by(self.get_username()):
+            return self.error('No access to featureset')
+
         if fset.finished is None:
-            raise RuntimeError("Can't build model for in-progress featureset.")
+            return self.error('Cannot build model for in-progress featureset')
 
         model_params = data
-
-        model_params = {k: util.robust_literal_eval(v)
+        model_params = {k: robust_literal_eval(v)
                         for k, v in model_params.items()}
 
         # TODO split out constant params / params to optimize
         model_params, params_to_optimize = model_params, {}
-        util.check_model_param_types(model_type, model_params)
+        check_model_param_types(model_type, model_params)
 
         model_path = pjoin(cfg['paths']['models_folder'],
-                           '{}_model.nc'.format(uuid.uuid4()))
+                           '{}_model.pkl'.format(uuid.uuid4()))
 
-        model_file = m.File.create(uri=model_path)
-        model = m.Model.create(name=model_name, file=model_file,
-                               featureset=fset, project=fset.project,
-                               params=model_params, type=model_type)
+        model_file = File.create(uri=model_path)
+        model = Model.create(name=model_name, file=model_file,
+                             featureset=fset, project=fset.project,
+                             params=model_params, type=model_type)
 
-        res = build_model_and_notify(get_username(), model.id, model_type,
-                                     model_params, fset.file.uri,
-                                     model_file.uri,
-                                     params_to_optimize).apply_async()
-        model.task_id = res.task_id
+        executor = yield self._get_executor()
+
+        fset_data = executor.submit(lambda path: xr.open_dataset(path).load(),
+                                    fset.file.uri)
+        computed_model = executor.submit(
+            build_model.build_model_from_featureset,
+            featureset=fset_data, model_type=model_type,
+            model_options=model_params,
+            params_to_optimize=params_to_optimize)
+        future = executor.submit(joblib.dump, computed_model, model_file.uri)
+
+        model.task_id = future.key
         model.save()
 
-        return success(data={'message': "We're working on your model"},
-                       action='cesium/FETCH_MODELS')
+        loop = tornado.ioloop.IOLoop.current()
+        loop.spawn_callback(self._await_model, future, model)
 
-    elif request.method == 'GET':
-        if model_id is not None:
-            model_info = m.Model.get(m.Model.id == model_id)
-        else:
-            model_info = [model for p in m.Project.all(get_username())
-                          for model in p.models]
-        return success(model_info)
+        return self.success(data={'message': "Model training started."},
+                            action='cesium/FETCH_MODELS')
 
-    elif request.method == 'DELETE':
-        if model_id is None:
-            return error("Invalid request - model set ID not provided.")
 
-        f = m.Model.get(m.Model.id == model_id)
-        if f.is_owned_by(get_username()):
-            f.delete_instance()
-        else:
-            raise UnauthorizedAccess("User not authorized for project.")
+    def delete(self, model_id):
+        m = self._get_model(model_id)
+        m.delete_instance()
 
-        return success(action='cesium/FETCH_MODELS')
-
-    elif request.method == 'PUT':
-        if model_id is None:
-            return error("Invalid request - model set ID not provided.")
-
-        return error("Functionality for this endpoint is not yet implemented.")
+        return self.success(action='cesium/FETCH_MODELS')

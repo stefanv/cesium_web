@@ -11,9 +11,6 @@ import hashlib
 import numpy as np
 import requests
 
-from .ext.sklearn_models import model_descriptions
-
-
 __all__ = ['check_model_param_types', 'make_list',
            'robust_literal_eval', 'warn_defaultdict']
 

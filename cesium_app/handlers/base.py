@@ -1,5 +1,6 @@
 import tornado.web
 import tornado.escape
+import tornado.ioloop
 
 from .. import models
 from ..json_util import to_json
@@ -53,9 +54,12 @@ class BaseHandler(tornado.web.RequestHandler):
             "message": message
             })
 
-    def success(self, data={}, action=None, payload=None):
+    def action(self, action, payload={}):
+        self.flow.push(self.get_username(), action, payload)
+
+    def success(self, data={}, action=None, payload={}):
         if action is not None:
-            self.flow.push(self.get_username(), action, payload or {})
+            self.action(action, payload)
 
         self.write(to_json(
             {
@@ -71,6 +75,21 @@ class BaseHandler(tornado.web.RequestHandler):
             err = 'An unknown error occurred'
 
         self.error(str(err))
+
+    @tornado.gen.coroutine
+    def _get_executor(self):
+        loop = tornado.ioloop.IOLoop.current()
+
+        IP = '127.0.0.1'
+        PORT = 63000
+        PORT_SCHEDULER = 63500
+
+        from distributed import Executor
+        executor = Executor('{}:{}'.format(IP, PORT_SCHEDULER), loop=loop,
+                            start=False)
+        yield executor._start()
+
+        return executor
 
 
 class AccessError(tornado.web.HTTPError):
