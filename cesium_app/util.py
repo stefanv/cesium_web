@@ -11,8 +11,7 @@ import hashlib
 import numpy as np
 import requests
 
-__all__ = ['check_model_param_types', 'make_list',
-           'robust_literal_eval', 'warn_defaultdict']
+__all__ = ['make_list', 'robust_literal_eval']
 
 
 def make_list(x):

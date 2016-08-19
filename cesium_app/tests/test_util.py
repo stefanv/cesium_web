@@ -1,12 +1,5 @@
-import os
 from cesium_app import util
-from cesium_app.ext.sklearn_models import model_descriptions
 import numpy.testing as npt
-try:
-    import docker
-    dockerpy_installed = True
-except ImportError:
-    dockerpy_installed = False
 import pytest
 
 
