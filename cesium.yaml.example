@@ -43,8 +43,8 @@ paths:
     predictions_folder:  '{data_path}/predictions'
     ts_data_folder:  '{data_path}/ts_data'
 
-    upload_folder:    '{data_path}/flask_uploads'
-    custom_feature_script_folder: '{data_path}/flask_uploads/custom_feature_scripts'
+    upload_folder:    '{data_path}/uploads'
+    custom_feature_script_folder: '{data_path}/uploads/custom_feature_scripts'
     temp: '/tmp/cesium'
 
 database:

@@ -47,7 +47,7 @@ debug:
 
 # Attach to terminal of running webserver; useful to, e.g., use pdb
 attach:
-	supervisorctl -c conf/supervisord_common.conf fg flask
+	supervisorctl -c conf/supervisord_common.conf fg app
 
 clean:
 	rm $(bundle)
