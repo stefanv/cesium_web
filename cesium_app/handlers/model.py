@@ -50,13 +50,13 @@ class ModelHandler(BaseHandler):
             self.action('cesium/SHOW_NOTIFICATION',
                         payload={"note": "Model '{}' computed.".format(model.name)})
 
-            self.action('cesium/FETCH_MODELS')
-
         except Exception as e:
             model.delete_instance()
             self.action('cesium/SHOW_NOTIFICATION',
                         payload={"note": "Cannot create model '{}': {}".format(model.name, e),
                                  "type": 'error'})
+
+        self.action('cesium/FETCH_MODELS')
 
     @tornado.gen.coroutine
     def post(self):

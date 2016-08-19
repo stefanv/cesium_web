@@ -1,61 +1,121 @@
-@app.route('/predictions', methods=['POST', 'GET'])
-@app.route('/predictions/<prediction_id>', methods=['GET', 'PUT', 'DELETE'])
-@exception_as_error
-def predictions(prediction_id=None):
-    """
-    """
-    # TODO: ADD MORE ROBUST EXCEPTION HANDLING (HERE AND ALL OTHER FUNCTIONS)
-    if request.method == 'POST':
-        data = request.get_json()
+from .base import BaseHandler, AccessError
+from ..models import Prediction, File, Dataset, Model, Project
+from ..config import cfg
+
+import tornado.gen
+
+import cesium.time_series
+import cesium.featurize
+import cesium.predict
+
+import xarray as xr
+from sklearn.externals import joblib
+from os.path import join as pjoin
+import uuid
+import datetime
+
+
+class PredictionHandler(BaseHandler):
+    def _get_prediction(self, prediction_id):
+        try:
+            d = Prediction.get(Prediction.id == prediction_id)
+        except Prediction.DoesNotExist:
+            raise AccessError('No such dataset')
+
+        if not d.is_owned_by(self.get_username()):
+            raise AccessError('No such dataset')
+
+        return d
+
+    @tornado.gen.coroutine
+    def _await_prediction(self, future, prediction):
+        try:
+            result = yield future._result()
+
+            prediction.task_id = None
+            prediction.finished = datetime.datetime.now()
+            prediction.save()
+
+            self.action('cesium/SHOW_NOTIFICATION',
+                        payload={
+                            "note": "Prediction '{}/{}' completed.".format(
+                                prediction.dataset.name,
+                                prediction.model.name)
+                            })
+
+        except Exception as e:
+            prediction.delete_instance()
+            self.action('cesium/SHOW_NOTIFICATION',
+                        payload={
+                            "note": "Prediction '{}/{}'" " failed "
+                            "with error {}. Please try again.".format(
+                                prediction.dataset.name,
+                                prediction.model.name, e),
+                             "type": "error"
+                            })
+
+        self.action('cesium/FETCH_PREDICTIONS')
+
+    @tornado.gen.coroutine
+    def post(self):
+        data = self.get_json()
 
         dataset_id = data['datasetID']
         model_id = data['modelID']
 
-        dataset = m.Dataset.get(m.Dataset.id == data["datasetID"])
-        model = m.Model.get(m.Model.id == data["modelID"])
-        if model.finished is None:
-            raise RuntimeError("Can't predict for in-progress model.")
+        dataset = Dataset.get(Dataset.id == data["datasetID"])
+        model = Model.get(Model.id == data["modelID"])
+
+        username = self.get_username()
+
+        if not (dataset.is_owned_by(username) and model.is_owned_by(username)):
+            return self.error('No access to dataset or model')
+
         fset = model.featureset
-        if fset.finished is None:
-            raise RuntimeError("Can't predict for in-progress featureset.")
+        if (model.finished is None) or (fset.finished is None):
+            return self.error('Computation of model or feature set still in progress')
+
         prediction_path = pjoin(cfg['paths']['predictions_folder'],
                                 '{}_prediction.nc'.format(uuid.uuid4()))
-        prediction_file = m.File.create(uri=prediction_path)
-        prediction = m.Prediction.create(file=prediction_file, dataset=dataset,
-                                         project=dataset.project, model=model)
-        res = predict_and_notify(get_username(), prediction.id, dataset.uris,
-            fset.features_list, model.file.uri, prediction_path,
-            custom_features_script=fset.custom_features_script).apply_async()
+        prediction_file = File.create(uri=prediction_path)
+        prediction = Prediction.create(file=prediction_file, dataset=dataset,
+                                       project=dataset.project, model=model)
 
-        prediction.task_id = res.task_id
+        executor = yield self._get_executor()
+
+        all_time_series = executor.map(cesium.time_series.from_netcdf,
+                                       dataset.uris)
+        all_features = executor.map(cesium.featurize.featurize_single_ts,
+                                    all_time_series,
+                                    features_to_use=fset.features_list,
+                                    custom_script_path=fset.custom_features_script)
+        fset = executor.submit(cesium.featurize.assemble_featureset,
+                               all_features, all_time_series)
+        model = executor.submit(joblib.load, model.file.uri)
+        predset = executor.submit(cesium.predict.model_predictions,
+                                  fset, model)
+        future = executor.submit(xr.Dataset.to_netcdf, predset, prediction_path)
+
+        prediction.task_id = future.key
         prediction.save()
 
-        return success(prediction, 'cesium/FETCH_PREDICTIONS')
+        loop = tornado.ioloop.IOLoop.current()
+        loop.spawn_callback(self._await_prediction, future, prediction)
 
-    elif request.method == 'GET':
-        if prediction_id is not None:
-            prediction = m.Prediction.get(m.Prediction.id == prediction_id)
-            prediction_info = prediction.display_info()
-        else:
-            predictions = [prediction for p in m.Project.all(get_username())
-                           for prediction in p.predictions]
+        return self.success(prediction, 'cesium/FETCH_PREDICTIONS')
+
+    def get(self, prediction_id=None):
+        if prediction_id is None:
+            predictions = [prediction
+                           for project in Project.all(self.get_username())
+                           for prediction in project.predictions]
             prediction_info = [p.display_info() for p in predictions]
-        return success(prediction_info)
-
-    elif request.method == 'DELETE':
-        if prediction_id is None:
-            return error("Invalid request - prediction set ID not provided.")
-
-        f = m.Prediction.get(m.Prediction.id == prediction_id)
-        if f.is_owned_by(get_username()):
-            f.delete_instance()
         else:
-            raise UnauthorizedAccess("User not authorized for project.")
+            prediction = self._get_prediction(prediction_id)
 
-        return success(action='cesium/FETCH_PREDICTIONS')
+        return self.success(prediction_info)
 
-    elif request.method == 'PUT':
-        if prediction_id is None:
-            return error("Invalid request - prediction set ID not provided.")
-
-        return error("Functionality for this endpoint is not yet implemented.")
+    def delete(self, prediction_id):
+        prediction = self._get_prediction(prediction_id)
+        prediction.delete_instance()
+        return self.success(action='cesium/FETCH_PREDICTIONS')

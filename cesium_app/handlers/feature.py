@@ -17,10 +17,10 @@ class FeatureHandler(BaseHandler):
         try:
             f = Featureset.get(Featureset.id == featureset_id)
         except Featureset.DoesNotExist:
-            raise AccessError('No such featureset')
+            raise AccessError('No such feature set')
 
         if not f.is_owned_by(self.get_username()):
-            raise AccessError('No such feautreset')
+            raise AccessError('No such feature set')
 
         return f
 
@@ -50,12 +50,13 @@ class FeatureHandler(BaseHandler):
             self.action('cesium/SHOW_NOTIFICATION',
                         payload={"note": "Calculation of featureset '{}' completed.".format(fset.name)})
 
-            self.action('cesium/FETCH_FEATURESETS')
         except Exception as e:
             fset.delete_instance()
             self.action('cesium/SHOW_NOTIFICATION',
                         payload={"note": 'Cannot featurize {}: {}'.format(fset.name, e),
                                  "type": 'error'})
+
+        self.action('cesium/FETCH_FEATURESETS')
 
     @tornado.gen.coroutine
     def post(self):

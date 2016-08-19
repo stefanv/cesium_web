@@ -5,15 +5,14 @@ import sys
 
 from .handlers import (
     ProjectHandler,
-    #TaskHandler,
     DatasetHandler,
     FeatureHandler,
     ModelHandler,
-    #PredictionHandler,
+    PredictionHandler,
     FeatureListHandler,
     SklearnModelsHandler,
     SocketAuthTokenHandler,
-    #PlotFeaturesHandler
+    PlotFeaturesHandler
     )
 
 
@@ -25,15 +24,14 @@ def make_app():
 
     handlers = [
         (r'/project(/.*)?', ProjectHandler),
-#        (r'/task_complete', TaskHandler),
         (r'/dataset(/.*)?', DatasetHandler),
         (r'/features(/.*)?', FeatureHandler),
         (r'/models(/.*)?', ModelHandler),
-#        (r'/predictions(/.*)?', PredictionHandler),
+        (r'/predictions(/.*)?', PredictionHandler),
         (r'/features_list', FeatureListHandler),
         (r'/socket_auth_token', SocketAuthTokenHandler),
         (r'/sklearn_models', SklearnModelsHandler),
-#        (r'/plot_features/(.*)', PlotFeaturesHandler),
+        (r'/plot_features/(.*)', PlotFeaturesHandler),
         (r'/(.*)', tornado.web.StaticFileHandler,
              {'path': 'public/', 'default_filename': 'index.html'})
     ]
