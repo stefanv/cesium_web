@@ -10,7 +10,7 @@ test_dataset_name = str(uuid.uuid4())
 
 
 def test_add_new_dataset(driver):
-    driver.get("http://localhost:5000")
+    driver.get("/")
     driver.set_window_size(1920,1080)
 
     with create_test_project() as p:

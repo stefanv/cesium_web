@@ -12,7 +12,7 @@ test_featureset_name = str(uuid.uuid4())
 
 
 def test_add_new_featureset(driver):
-    driver.get('http://localhost:5000')
+    driver.get('/')
     driver.set_window_size(1920,1080)
     with create_test_project() as p, create_test_dataset(p) as ds:
         driver.refresh()
@@ -37,7 +37,7 @@ def test_add_new_featureset(driver):
 
 
 def test_check_uncheck_features(driver):
-    driver.get('http://localhost:5000')
+    driver.get('/')
     driver.set_window_size(1920,1080)
     with create_test_project() as p, create_test_dataset(p) as ds:
         driver.refresh()
@@ -109,7 +109,7 @@ def test_cannot_compute_zero_features(driver):
 
 
 def test_plot_features(driver):
-    driver.get('http://localhost:5000')
+    driver.get('/')
     driver.set_window_size(1920,1080)
     with create_test_project() as p, create_test_dataset(p) as ds,\
          create_test_featureset(p) as fs:
@@ -129,7 +129,7 @@ def test_plot_features(driver):
 
 
 def test_delete_featureset(driver):
-    driver.get('http://localhost:5000')
+    driver.get('/')
     driver.set_window_size(1920,1080)
     with create_test_project() as p, create_test_dataset(p) as ds,\
          create_test_featureset(p) as fs:

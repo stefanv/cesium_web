@@ -1,6 +1,7 @@
 import pytest
 import os
 import distutils.spawn
+import types
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -22,5 +23,11 @@ def driver(request):
         driver.close()
 
     request.addfinalizer(close)
+
+    driver._get = driver.get
+    def get(self, uri):
+        return self._get('http://localhost:9000' + uri)
+
+    driver.get = types.MethodType(get, driver)
 
     return driver

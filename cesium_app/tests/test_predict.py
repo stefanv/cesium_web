@@ -10,7 +10,7 @@ from util import create_test_project, create_test_dataset,\
 
 
 def test_add_prediction(driver):
-    driver.get('http://localhost:5000')
+    driver.get('/')
     driver.set_window_size(1920,1080)
     with create_test_project() as p, create_test_dataset(p) as ds,\
          create_test_featureset(p) as fs, create_test_model(fs) as m:
@@ -57,7 +57,7 @@ def test_click_prediction(driver):
 
 
 def test_delete_prediction(driver):
-    driver.get('http://localhost:5000')
+    driver.get('/')
     driver.set_window_size(1920,1080)
     with create_test_project() as p, create_test_dataset(p) as ds,\
          create_test_featureset(p) as fs, create_test_model(fs) as m,\

@@ -9,7 +9,7 @@ from util import create_test_project
 def test_create_project(driver):
     driver.set_window_size(1920,1080)
 
-    driver.get("http://localhost:5000")
+    driver.get("/")
 
     # Add new project
     driver.implicitly_wait(1)
