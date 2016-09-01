@@ -55,7 +55,7 @@ clean:
 test_headless:
 	PYTHONPATH='.' xvfb-run ./tools/frontend_tests.py
 
-test_headful:
+test:
 	PYTHONPATH='.' ./tools/frontend_tests.py
 
 status:

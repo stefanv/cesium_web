@@ -11,3 +11,4 @@ simplejson
 distributed
 selenium
 joblib
+pytest

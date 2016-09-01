@@ -93,7 +93,7 @@ class ModelHandler(BaseHandler):
 
         executor = yield self._get_executor()
 
-        fset_data = executor.submit(lambda path: xr.open_dataset(path).load(),
+        fset_data = executor.submit(lambda path: xr.open_dataset(path, engine='h5netcdf').load(),
                                     fset.file.uri)
         computed_model = executor.submit(
             build_model.build_model_from_featureset,

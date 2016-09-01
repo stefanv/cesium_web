@@ -10,7 +10,7 @@ from cesium import build_model
 
 
 def feature_scatterplot(fset_path, features_to_plot):
-    with xr.open_dataset(fset_path) as fset:
+    with xr.open_dataset(fset_path, engine='h5netcdf') as fset:
         feat_df = build_model.rectangularize_featureset(fset)
 
         feat_df = feat_df[features_to_plot]
@@ -31,7 +31,7 @@ def feature_scatterplot(fset_path, features_to_plot):
 
 
 def prediction_heatmap(pred_path):
-    with xr.open_dataset(pred_path) as pset:
+    with xr.open_dataset(pred_path, engine='h5netcdf') as pset:
         pred_df = pd.DataFrame(pset.prediction.values, index=pset.name,
                                columns=pset.class_label.values)
     pred_labels = pred_df.idxmax(axis=1)
