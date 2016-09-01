@@ -55,6 +55,7 @@ class FeatureHandler(BaseHandler):
             self.action('cesium/SHOW_NOTIFICATION',
                         payload={"note": 'Cannot featurize {}: {}'.format(fset.name, e),
                                  "type": 'error'})
+            print('Error featurizing:', type(e), e)
 
         self.action('cesium/FETCH_FEATURESETS')
 

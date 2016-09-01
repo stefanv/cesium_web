@@ -28,6 +28,7 @@ def driver(request):
     def get(self, uri):
         return self._get('http://localhost:9000' + uri)
 
+    driver.set_window_size(1920, 1080)
     driver.get = types.MethodType(get, driver)
 
     return driver

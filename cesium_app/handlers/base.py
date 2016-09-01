@@ -49,6 +49,7 @@ class BaseHandler(tornado.web.RequestHandler):
         models.db.close()
 
     def error(self, message):
+        print('APP ERROR:', message)
         self.write({
             "status": "error",
             "message": message
