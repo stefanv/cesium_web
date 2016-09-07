@@ -68,4 +68,4 @@ def test_delete_prediction(driver):
         driver.find_element_by_partial_link_text('Delete').click()
         driver.implicitly_wait(1)
         status_td = driver.find_element_by_xpath(
-            "//div[contains(text(),'Prediction successfully deleted')]")
+            "//div[contains(text(),'Prediction deleted')]")

@@ -98,7 +98,8 @@ class FeatureHandler(BaseHandler):
                                     custom_script_path=custom_script_path)
         computed_fset = executor.submit(featurize.assemble_featureset,
                                         all_features, all_time_series)
-        future = executor.submit(xr.Dataset.to_netcdf, computed_fset, fset_path, engine='h5netcdf')
+        future = executor.submit(xr.Dataset.to_netcdf, computed_fset,
+                                 fset_path, engine=cfg['xr_engine'])
         fset.task_id = future.key
         fset.save()
 

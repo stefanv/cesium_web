@@ -60,6 +60,9 @@ docker:
 server:
     url: http://localhost:5000
 
+xr_engine: netcdf4
+##xr_engine: h5netcdf
+
 ## testing:
 ##    ## Disable authentication
 ##    disable_auth: 1

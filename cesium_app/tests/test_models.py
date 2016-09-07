@@ -13,12 +13,10 @@ test_model_name = str(uuid.uuid4())
 
 def test_add_model(driver):
     driver.get('/')
-    with create_test_project() as p, create_test_dataset(p) as ds,\
-         create_test_featureset(p) as fs:
+    with create_test_project() as p, create_test_featureset(p) as fs:
         driver.refresh()
         proj_select = Select(driver.find_element_by_css_selector('[name=project]'))
         proj_select.select_by_value(str(p.id))
-
 
         driver.find_element_by_id('react-tabs-6').click()
         driver.find_element_by_partial_link_text('Create New Model').click()
@@ -31,7 +29,7 @@ def test_add_model(driver):
         driver.implicitly_wait(0.2)
         try:
             status_td = driver.find_element_by_xpath(
-                "//div[contains(text(),'Model training started')]")
+                "//div[contains(text(),'Model training begun')]")
 
             driver.implicitly_wait(1)
             status_td = driver.find_element_by_xpath("//td[contains(text(),'Completed')]")
@@ -41,12 +39,11 @@ def test_add_model(driver):
 
 def test_delete_model(driver):
     driver.get('/')
-    with create_test_project() as p, create_test_dataset(p) as ds,\
-         create_test_featureset(p) as fs, create_test_model(fs) as m:
+    with create_test_project() as p, create_test_featureset(p) as fs,\
+         create_test_model(fs) as m:
         driver.refresh()
         proj_select = Select(driver.find_element_by_css_selector('[name=project]'))
         proj_select.select_by_value(str(p.id))
-
 
         driver.find_element_by_id('react-tabs-6').click()
         driver.find_element_by_partial_link_text('Delete').click()
@@ -57,8 +54,7 @@ def test_delete_model(driver):
 
 def test_hyper_param_populate(driver):
     driver.get('/')
-    with create_test_project() as p, create_test_dataset(p) as ds,\
-         create_test_featureset(p) as fs, create_test_model(fs) as m:
+    with create_test_project() as p, create_test_featureset(p) as fs, create_test_model(fs) as m:
         driver.refresh()
         proj_select = Select(driver.find_element_by_css_selector('[name=project]'))
         proj_select.select_by_value(str(p.id))

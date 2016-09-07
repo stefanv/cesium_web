@@ -52,10 +52,10 @@ attach:
 clean:
 	rm $(bundle)
 
-test_headless:
+test_headless: paths dependencies
 	PYTHONPATH='.' xvfb-run ./tools/frontend_tests.py
 
-test:
+test: paths dependencies
 	PYTHONPATH='.' ./tools/frontend_tests.py
 
 status:
