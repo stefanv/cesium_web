@@ -70,6 +70,8 @@ class FeatureHandler(BaseHandler):
         feat_type_name = [feat.split('_', 1) for (feat, selected) in
                           feature_fields.items() if selected]
         features_to_use = [fname for (ftype, fname) in feat_type_name]
+        if not features_to_use:
+            return self.error("At least one feature must be selected.")
 
         custom_feats_code = data['customFeatsCode'].strip()
         custom_script_path = None
