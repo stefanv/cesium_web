@@ -70,6 +70,8 @@ class FeatureHandler(BaseHandler):
         feat_type_name = [feat.split('_', 1) for (feat, selected) in
                           feature_fields.items() if selected]
         features_to_use = [fname for (ftype, fname) in feat_type_name]
+        if not features_to_use:
+            return self.error("At least one feature must be selected.")
 
         custom_feats_code = data['customFeatsCode'].strip()
         custom_script_path = None
@@ -96,7 +98,8 @@ class FeatureHandler(BaseHandler):
                                     custom_script_path=custom_script_path)
         computed_fset = executor.submit(featurize.assemble_featureset,
                                         all_features, all_time_series)
-        future = executor.submit(xr.Dataset.to_netcdf, computed_fset, fset_path, engine='h5netcdf')
+        future = executor.submit(xr.Dataset.to_netcdf, computed_fset,
+                                 fset_path, engine=cfg['xr_engine'])
         fset.task_id = future.key
         fset.save()
 

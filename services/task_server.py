@@ -23,7 +23,7 @@ if __name__ == "__main__":
     print('Task scheduler listening on port {}'.format(PORT_SCHEDULER))
 
     from distributed import Worker
-    w = Worker('127.0.0.1', PORT_SCHEDULER, loop=loop)
+    w = Worker('127.0.0.1', PORT_SCHEDULER, loop=loop, ncores=1)
     w.start(0)
     print('Single worker activated')
 

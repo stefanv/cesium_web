@@ -89,12 +89,13 @@ class PredictionHandler(BaseHandler):
                                     all_time_series,
                                     features_to_use=fset.features_list,
                                     custom_script_path=fset.custom_features_script)
-        fset = executor.submit(cesium.featurize.assemble_featureset,
-                               all_features, all_time_series)
-        model = executor.submit(joblib.load, model.file.uri)
+        fset_data = executor.submit(cesium.featurize.assemble_featureset,
+                                    all_features, all_time_series)
+        model_data = executor.submit(joblib.load, model.file.uri)
         predset = executor.submit(cesium.predict.model_predictions,
-                                  fset, model)
-        future = executor.submit(xr.Dataset.to_netcdf, predset, prediction_path, engine='h5netcdf')
+                                  fset_data, model_data)
+        future = executor.submit(xr.Dataset.to_netcdf, predset,
+                                 prediction_path, engine=cfg['xr_engine'])
 
         prediction.task_id = future.key
         prediction.save()

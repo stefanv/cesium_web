@@ -2,6 +2,7 @@ import pytest
 import os
 import distutils.spawn
 import types
+from cesium_app import models as m
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -32,3 +33,14 @@ def driver(request):
     driver.get = types.MethodType(get, driver)
 
     return driver
+
+
+@pytest.fixture(scope="session", autouse=True)
+def remove_test_files(request):
+    def teardown():
+        for f in m.File.select():
+            try:
+                os.remove(f.file.uri)
+            except:
+                pass
+    request.addfinalizer(teardown)

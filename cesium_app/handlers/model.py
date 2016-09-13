@@ -93,7 +93,7 @@ class ModelHandler(BaseHandler):
 
         executor = yield self._get_executor()
 
-        fset_data = executor.submit(lambda path: xr.open_dataset(path, engine='h5netcdf').load(),
+        fset_data = executor.submit(lambda path: xr.open_dataset(path, engine=cfg['xr_engine']),
                                     fset.file.uri)
         computed_model = executor.submit(
             build_model.build_model_from_featureset,
@@ -101,6 +101,7 @@ class ModelHandler(BaseHandler):
             model_options=model_params,
             params_to_optimize=params_to_optimize)
         future = executor.submit(joblib.dump, computed_model, model_file.uri)
+        closed = executor.submit(xr.Dataset.close, fset_data)
 
         model.task_id = future.key
         model.save()
@@ -108,7 +109,7 @@ class ModelHandler(BaseHandler):
         loop = tornado.ioloop.IOLoop.current()
         loop.spawn_callback(self._await_model, future, model)
 
-        return self.success(data={'message': "Model training started."},
+        return self.success(data={'message': "Model training begun."},
                             action='cesium/FETCH_MODELS')
 
 
