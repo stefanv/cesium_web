@@ -11,5 +11,4 @@ plotly
 simplejson
 distributed
 selenium
-joblib
 pytest
