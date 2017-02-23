@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "bootstrap": "^3.3.7",
+    "jquery": "latest",
     "bootstrap-css": "^3.0.0",
     "plotly.js": "^1.23.1",
     "react": "^15.1.0",

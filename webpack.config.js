@@ -40,6 +40,13 @@ const config = {
     new webpack.ProvidePlugin({
       fetch: 'imports-loader?this=>global!exports-loader?global.fetch!whatwg-fetch'
     }),
+
+    // We do not use JQuery for anything in this project; but Bootstrap
+    // depends on it
+    new webpack.ProvidePlugin({
+      $: "jquery",
+      jQuery: "jquery",
+    })
   ],
   resolve: {
     extensions: ['.js', '.jsx']
