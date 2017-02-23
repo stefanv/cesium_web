@@ -12,7 +12,7 @@ dev_dependencies:
 
 dependencies:
 	@./tools/install_deps.py requirements.txt
-	@./tools/install_npm_deps.py package.json
+	npm update
 
 db_init:
 	./tools/db_create.sh
