@@ -18,6 +18,7 @@ section_end "install.cesium.requirements"
 
 
 section "install.cesium_web.requirements"
+npm -g install npm@latest
 npm --version
 node --version
 make dependencies
