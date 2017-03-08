@@ -14,11 +14,12 @@ from os.path import join as pjoin
 import uuid
 import datetime
 
-import tornado.ioloop
 from sklearn.model_selection import GridSearchCV
 import joblib
 from distributed.client import _wait
 
+import tornado.ioloop
+import tornado.web
 
 def _build_model_compute_statistics(fset_path, model_type, model_params,
                                     params_to_optimize, model_path):
@@ -78,20 +79,22 @@ class ModelHandler(BaseHandler):
         except Model.DoesNotExist:
             raise AccessError('No such model')
 
-        if not m.is_owned_by(self.get_username()):
+        if not m.is_owned_by(self.current_user):
             raise AccessError('No such project')
 
         return m
 
+    @tornado.web.authenticated
     def get(self, model_id=None):
         if model_id is not None:
             model_info = self._get_model(model_id)
         else:
-            model_info = [model for p in Project.all(self.get_username())
+            model_info = [model for p in Project.all(self.current_user)
                           for model in p.models]
 
         return self.success(model_info)
 
+    @tornado.web.authenticated
     @tornado.gen.coroutine
     def _await_model_statistics(self, model_stats_future, model):
         try:
@@ -114,6 +117,7 @@ class ModelHandler(BaseHandler):
 
         self.action('cesium/FETCH_MODELS')
 
+    @tornado.web.authenticated
     @tornado.gen.coroutine
     def post(self):
         data = self.get_json()
@@ -125,7 +129,7 @@ class ModelHandler(BaseHandler):
         project_id = data.pop('project')
 
         fset = Featureset.get(Featureset.id == featureset_id)
-        if not fset.is_owned_by(self.get_username()):
+        if not fset.is_owned_by(self.current_user):
             return self.error('No access to featureset')
 
         if fset.finished is None:
@@ -161,7 +165,7 @@ class ModelHandler(BaseHandler):
         return self.success(data={'message': "Model training begun."},
                             action='cesium/FETCH_MODELS')
 
-
+    @tornado.web.authenticated
     def delete(self, model_id):
         m = self._get_model(model_id)
         m.delete_instance()
