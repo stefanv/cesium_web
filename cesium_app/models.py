@@ -58,11 +58,6 @@ class UserSocialAuth(BaseModel, PeeweeUserMixin):
     def user_model(cls):
         return User
 
-class SocialAuthUser(BaseModel, PeeweeUserMixin):
-    @classmethod
-    def user_model(cls):
-        return User
-
 
 class TornadoStorage(BasePeeweeStorage):
     class nonce(PeeweeNonceMixin):
@@ -80,7 +75,7 @@ class TornadoStorage(BasePeeweeStorage):
     class partial(PeeweePartialMixin):
         pass
 
-    user = SocialAuthUser
+    user = UserSocialAuth
 
 
 class Project(BaseModel):
