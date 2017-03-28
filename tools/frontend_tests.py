@@ -17,8 +17,17 @@ base_dir = os.path.abspath(pjoin(os.path.dirname(__file__), '..'))
 
 def add_test_yaml():
     print('Creating cesium-test.yaml')
+
+    from textwrap import dedent
     with open('cesium-test.yaml', 'w') as f:
-        f.write('database:\n    database: cesium_test\n    user: cesium')
+        f.write(dedent('''
+            database:
+                database: cesium_test
+                user: cesium
+
+            server:
+                multi_user: False
+        '''))
 
 
 def delete_test_yaml():

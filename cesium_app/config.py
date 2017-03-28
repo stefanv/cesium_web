@@ -111,7 +111,7 @@ def show_config():
     print("=" * 78)
     print("cesium configuration")
 
-    for key in ('paths', 'database', 'testing', 'docker'):
+    for key in ('paths', 'database', 'testing', 'server'):
         if key in cfg:
             print("-" * 78)
             print(key)

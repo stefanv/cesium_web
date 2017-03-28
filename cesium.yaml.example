@@ -29,3 +29,5 @@ database:
 
 server:
     url: http://localhost:5000
+    multi_user: True
+

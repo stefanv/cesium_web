@@ -85,7 +85,8 @@ class Project(BaseModel):
     created = pw.DateTimeField(default=datetime.datetime.now)
 
     @staticmethod
-    def all(user):
+    def all(username):
+        user = User.get(username=username)
         return (Project
                 .select()
                 .join(UserProject)
@@ -93,13 +94,15 @@ class Project(BaseModel):
                 .order_by(Project.created))
 
     @staticmethod
-    def add_by(name, description, user):
+    def add_by(name, description, username):
+        user = User.get(username=username)
         with db.atomic():
             p = Project.create(name=name, description=description)
             UserProject.create(user=user, project=p)
         return p
 
-    def is_owned_by(self, user):
+    def is_owned_by(self, username):
+        user = User.get(username=username)
         users = [owner.user for owner in self.owners]
         return user in users
 
@@ -164,8 +167,8 @@ class Dataset(BaseModel):
                                                                     == self.id)
         return list(query.execute())
 
-    def is_owned_by(self, user):
-        return self.project.is_owned_by(user)
+    def is_owned_by(self, username):
+        return self.project.is_owned_by(username)
 
     def display_info(self):
         info = self.__dict__()
@@ -203,8 +206,8 @@ class Featureset(BaseModel):
     task_id = pw.CharField(null=True)
     finished = pw.DateTimeField(null=True)
 
-    def is_owned_by(self, user):
-        return self.project.is_owned_by(user)
+    def is_owned_by(self, username):
+        return self.project.is_owned_by(username)
 
     @staticmethod
     def get_if_owned(fset_id, username):
@@ -234,8 +237,8 @@ class Model(BaseModel):
     finished = pw.DateTimeField(null=True)
     train_score = pw.FloatField(null=True)
 
-    def is_owned_by(self, user):
-        return self.project.is_owned_by(user)
+    def is_owned_by(self, username):
+        return self.project.is_owned_by(username)
 
 
 class Prediction(BaseModel):
@@ -250,8 +253,8 @@ class Prediction(BaseModel):
     task_id = pw.CharField(null=True)
     finished = pw.DateTimeField(null=True)
 
-    def is_owned_by(self, user):
-        return self.project.is_owned_by(user)
+    def is_owned_by(self, username):
+        return self.project.is_owned_by(username)
 
     def format_pred_data(fset, data):
         fset.columns = fset.columns.droplevel('channel')

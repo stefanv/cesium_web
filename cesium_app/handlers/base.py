@@ -13,6 +13,7 @@ from social_tornado.handlers import BaseHandler as PSABaseHandler
 from .. import models
 from ..json_util import to_json
 from ..flow import Flow
+from ..config import cfg
 
 import time
 
@@ -48,17 +49,25 @@ class BaseHandler(PSABaseHandler):
         return super(BaseHandler, self).prepare()
 
     def get_current_user(self):
+        if not cfg['server']['multi_user']:
+            username = 'testuser@gmail.com'
+            try:
+                models.User.get(username=username)
+            except models.User.DoesNotExist:
+                models.User.create(username=username, email=username)
+            return 'testuser@gmail.com'
+
         user_id = self.get_secure_cookie('user_id')
         if user_id is None:
             return None
         else:
             try:
-                return models.User.get(id=int(user_id))
+                return models.User.get(id=int(user_id)).username
             except models.User.DoesNotExist:
                 return None
 
     def push(self, action, payload={}):
-        self.flow.push(self.current_user.username, action, payload)
+        self.flow.push(self.current_user, action, payload)
 
     def get_json(self):
         return tornado.escape.json_decode(self.request.body)
