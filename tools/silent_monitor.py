@@ -17,10 +17,10 @@ sys.stdout.flush()
 p = subprocess.Popen(shlex.split(cmd),
         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-err = p.wait()
-stdout, stderr = p.stderr.read().strip(), p.stdout.read().strip()
+err = p.returncode
+stdout, stderr = p.communicate()
 
-if err == 0:
+if err:
     print('\r[✓] {}'.format(tag))
 else:
     print('\r[✗] {}'.format(tag))
@@ -38,4 +38,3 @@ else:
         print('--- end ---')
 
     sys.exit(err)
-
