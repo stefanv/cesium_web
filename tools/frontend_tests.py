@@ -26,6 +26,7 @@ def add_test_yaml():
                 user: cesium
 
             server:
+                url: http://localhost:5000
                 multi_user: False
         '''))
 
