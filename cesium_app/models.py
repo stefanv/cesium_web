@@ -317,6 +317,9 @@ if __name__ == "__main__":
     create_tables()
 
     USERNAME = 'testuser@gmail.com'
+    print("Create dummy user: {}".format(USERNAME))
+    u = User.create(username=USERNAME, email=USERNAME)
+
     print("Inserting dummy projects...")
     for i in range(5):
         p = Project.create(name='test project {}'.format(i))
@@ -325,9 +328,7 @@ if __name__ == "__main__":
     print("Creating dummy project owners...")
     for i in range(3):
         p = Project.get(Project.id == i + 1)
-        # This will probably break; add a real user to the DB first
-        u = UserProject.create(user=USERNAME, project=p)
-        print(u)
+        up = UserProject.create(user=u, project=p)
 
     print('ASSERT User should have 3 projects')
     print(to_json(p.all('testuser@gmail.com')))

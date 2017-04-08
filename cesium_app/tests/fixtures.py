@@ -20,6 +20,15 @@ import pandas as pd
 @contextmanager
 def create_test_project():
     """Create and yield test project, then delete."""
+    username = 'testuser@gmail.com'
+    try:
+        m.User.create(username=username, email=username)
+    except peewee.IntegrityError as e:
+        if not 'already exists' in str(e):
+            raise
+    else:
+        print('Created user: {}'.format(username))
+
     p = m.Project.add_by('test_proj', 'test_desc', 'testuser@gmail.com')
     p.save()
     try:
