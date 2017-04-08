@@ -78,7 +78,8 @@ def make_app():
         (r'/profile', ProfileHandler),
 
         (r'/()', MainPageHandler),
-        (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': 'static/'})
+        (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': 'static/'}),
+        (r'/(favicon.png)', tornado.web.StaticFileHandler, {'path': 'static/'})
     ]
 
     return tornado.web.Application(handlers, **settings)
