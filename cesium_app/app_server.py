@@ -20,7 +20,8 @@ from .handlers import (
     SocketAuthTokenHandler,
     PlotFeaturesHandler,
     PredictRawDataHandler,
-    ProfileHandler
+    ProfileHandler,
+    LogoutHandler
     )
 
 
@@ -79,6 +80,7 @@ def make_app():
         (r'/sklearn_models', SklearnModelsHandler),
         (r'/plot_features/(.*)', PlotFeaturesHandler),
         (r'/profile', ProfileHandler),
+        (r'/logout', LogoutHandler),
 
         (r'/()', MainPageHandler),
         (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': 'static/'}),
