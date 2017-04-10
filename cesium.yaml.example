@@ -22,12 +22,14 @@ paths:
 
 database:
     database: cesium
-    host: 
+    host:
     port: 5432
     user: cesium
-    password: 
+    password:
 
 server:
     url: http://localhost:5000
     multi_user: True
-
+    auth:
+        google_oauth2_key:
+        google_oauth2_secret:

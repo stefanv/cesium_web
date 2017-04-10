@@ -5,6 +5,7 @@ from .config import cfg
 
 import sys
 
+# This provides `login`, `complete`, and `disconnect` endpoints
 from social_tornado.routes import SOCIAL_AUTH_ROUTES
 
 from .handlers import (
@@ -53,8 +54,10 @@ def make_app():
         #
         # You need to have Google+ API enabled; it takes a few minutes to activate.
 
-        'SOCIAL_AUTH_GOOGLE_OAUTH2_KEY': '544669011322-76ebnoj0fhvle168682rvmivc3fpchpi.apps.googleusercontent.com',
-        'SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET': 'b22Ya_1xljAqmM9gVh7KsppO',
+        'SOCIAL_AUTH_GOOGLE_OAUTH2_KEY': \
+          cfg['server']['auth']['google_oauth2_key'],
+        'SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET': \
+          cfg['server']['auth']['google_oauth2_secret'],
     }
 
     if settings['cookie_secret'] == 'abc01234':
