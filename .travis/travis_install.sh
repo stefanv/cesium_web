@@ -2,8 +2,13 @@
 
 set -ex
 
-
 section "install.base.requirements"
+
+# Install v1.7 or newer of nginx to support 'if' statement for logging
+sudo apt-add-repository -y ppa:nginx/development
+sudo apt update
+sudo apt install -y nginx
+
 pip install --upgrade pip
 hash -d pip  # find upgraded pip
 pip install --retries 3 -q requests
