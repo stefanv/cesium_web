@@ -48,13 +48,6 @@ def make_app():
 
         'SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL': True,
 
-        # From https://console.developers.google.com/
-        # - Create Client ID
-        # - Javascript origins: https://localhost:5000
-        # - Authorized redirect URLs: http://localhost:5000/complete/google-oauth2/
-        #
-        # You need to have Google+ API enabled; it takes a few minutes to activate.
-
         'SOCIAL_AUTH_GOOGLE_OAUTH2_KEY': \
           cfg['server']['auth']['google_oauth2_key'],
         'SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET': \
