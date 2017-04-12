@@ -12,10 +12,7 @@ dependencies:
 	@./tools/silent_monitor.py ./tools/check_js_deps.sh
 
 db_init:
-	@./tools/silent_monitor.py ./tools/db_create.sh
-
-db_drop:
-	@PYTHONPATH=. ./tools/silent_monitor.py ./tools/db_drop.py
+	@./tools/silent_monitor.py ./tools/db_init.sh
 
 db_test_data:
 	@PYTHONPATH=. python ./cesium_app/models.py

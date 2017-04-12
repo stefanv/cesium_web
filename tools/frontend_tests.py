@@ -12,6 +12,9 @@ try:
 except ImportError:
     import httplib as http
 
+from cesium_app.model_util import reset_tables
+
+
 base_dir = os.path.abspath(pjoin(os.path.dirname(__file__), '..'))
 
 
@@ -35,15 +38,10 @@ def delete_test_yaml():
     os.remove('cesium-test.yaml')
 
 
-def clear_db():
-    from cesium_app import models
-    models.drop_tables()
-    models.create_tables()
-
-
 if __name__ == '__main__':
     add_test_yaml()
-    clear_db()
+    clear_tables()
+
     web_client = subprocess.Popen(['make'], cwd=base_dir)
 
     print('[test_frontend] Waiting for supervisord to launch all server processes...')

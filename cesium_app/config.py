@@ -43,6 +43,23 @@ class warn_defaultdict(dict):
 
         return dict.__getitem__(self, key)
 
+class Config(warn_defaultdict):
+    def show(self):
+        """Print config settings to stdout (run on app start)."""
+        print()
+        print("=" * 78)
+        print("cesium configuration")
+
+        for key in ('paths', 'database', 'testing', 'server'):
+            if key in cfg:
+                print("-" * 78)
+                print(key)
+
+                if isinstance(cfg[key], dict):
+                    for key, val in cfg[key].items():
+                        print('  ', key.ljust(30), val)
+
+        print("=" * 78)
 
 
 # Load configuration
@@ -57,7 +74,7 @@ config_files = [os.path.abspath(cf) for cf in config_files]
 
 
 # Load example config file as default template
-cfg = warn_defaultdict()
+cfg = Config()
 cfg.update(yaml.load(open(os.path.join(os.path.dirname(__file__),
                                        "../cesium.yaml.example"))))
 
@@ -105,21 +122,5 @@ del yaml, os, sys, print_function, config_files, multiprocessing
 cfg['cesium'] = locals()
 
 
-def show_config():
-    """Print config settings to stdout (run on app start)."""
-    print()
-    print("=" * 78)
-    print("cesium configuration")
-
-    for key in ('paths', 'database', 'testing', 'server'):
-        if key in cfg:
-            print("-" * 78)
-            print(key)
-
-            if isinstance(cfg[key], dict):
-                for key, val in cfg[key].items():
-                    print('  ', key.ljust(30), val)
-
-    print("=" * 78)
-
-show_config()
+if __name__ == "__main__":
+    show()

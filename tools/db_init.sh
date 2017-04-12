@@ -18,4 +18,4 @@ else
     psql -U cesium -c 'GRANT ALL PRIVILEGES ON DATABASE cesium_test to cesium;'
 fi
 
-python -c  'from cesium_app.models import create_tables; create_tables()'
+python -c  'from cesium_app.model_util import clear_tables; clear_tables()'

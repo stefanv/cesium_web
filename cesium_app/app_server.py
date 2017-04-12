@@ -37,7 +37,7 @@ def make_app():
 
         # Python Social Auth configuration
         'SOCIAL_AUTH_USER_MODEL': 'cesium_app.models.User',
-        'SOCIAL_AUTH_STORAGE': 'cesium_app.models.TornadoStorage',
+        'SOCIAL_AUTH_STORAGE': 'cesium_app.psa.TornadoPeeweeStorage',
         'SOCIAL_AUTH_STRATEGY': 'social_tornado.strategy.TornadoStrategy',
         'SOCIAL_AUTH_AUTHENTICATION_BACKENDS': (
             'social_core.backends.google.GoogleOAuth2',
@@ -80,4 +80,7 @@ def make_app():
         (r'/(favicon.png)', tornado.web.StaticFileHandler, {'path': 'static/'})
     ]
 
-    return tornado.web.Application(handlers, **settings)
+    app = tornado.web.Application(handlers, **settings)
+    app.cfg = cfg
+
+    return app

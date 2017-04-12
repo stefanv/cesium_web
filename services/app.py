@@ -7,6 +7,7 @@ import tornado.log
 # TODO: Capture --debug flag
 
 app = app_server.make_app()
+app.cfg.show()
 app.listen(65000)
 
 ioloop.IOLoop.current().start()

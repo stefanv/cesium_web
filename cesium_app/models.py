@@ -1,5 +1,4 @@
 import datetime
-import inspect
 import os
 import sys
 import time
@@ -14,18 +13,21 @@ from cesium_app.json_util import to_json
 from cesium_app.config import cfg
 from cesium import featurize
 
-from social_peewee.storage import (
-    database_proxy,
-    BasePeeweeStorage, PeeweeAssociationMixin, PeeweeCodeMixin,
-    PeeweeNonceMixin, PeeweePartialMixin, PeeweeUserMixin)
-
 
 db = pw.PostgresqlDatabase(autocommit=True, autorollback=True,
                            **cfg['database'])
-database_proxy.initialize(db)
 
 
 class BaseModel(signals.Model):
+    """All other models are derived from this one.
+
+    It adds the following:
+
+    - __dict__ method to convert the model to a dict
+    - __str__ method to convert the model to a JSON string: `str(my_model)`
+    - Specify the database in use
+
+    """
     def __str__(self):
         return to_json(self.__dict__())
 
@@ -37,6 +39,12 @@ class BaseModel(signals.Model):
 
 
 class User(BaseModel):
+    """This model defines any user attributes needed by the web app.
+
+    Other user information needed by the login system is stored in
+    UserSocialAuth.
+
+    """
     username = pw.CharField(unique=True)
     email = pw.CharField(unique=True)
 
@@ -49,33 +57,6 @@ class User(BaseModel):
 
     def is_active(self):
         return True
-
-
-class UserSocialAuth(BaseModel, PeeweeUserMixin):
-    user = pw.ForeignKeyField(User, related_name='social_auth')
-
-    @classmethod
-    def user_model(cls):
-        return User
-
-
-class TornadoStorage(BasePeeweeStorage):
-    class nonce(PeeweeNonceMixin):
-        """Single use numbers"""
-        pass
-
-    class association(PeeweeAssociationMixin):
-        """OpenId account association"""
-        pass
-
-    class code(PeeweeCodeMixin):
-        """Mail validation single one time use code"""
-        pass
-
-    class partial(PeeweePartialMixin):
-        pass
-
-    user = UserSocialAuth
 
 
 class Project(BaseModel):
@@ -284,69 +265,3 @@ class Prediction(BaseModel):
             info['isProbabilistic'] = (len(data['pred_probs']) > 0)
             info['results'] = Prediction.format_pred_data(fset, data)
         return info
-
-
-models = [
-    obj for (name, obj) in inspect.getmembers(sys.modules[__name__])
-    if inspect.isclass(obj) and issubclass(obj, pw.Model)
-    and not obj == BaseModel
-]
-
-
-def create_tables(retry=5):
-    for i in range(1, retry + 1):
-        try:
-            db.create_tables(models, safe=True)
-            return
-        except Exception as e:
-            if (i == retry):
-                raise e
-            else:
-                print('Could not connect to database...sleeping 5')
-                time.sleep(5)
-
-
-def drop_tables():
-    db.drop_tables(models, safe=True, cascade=True)
-
-
-if __name__ == "__main__":
-    print("Dropping all tables...")
-    drop_tables()
-    print("Creating tables: {}".format([m.__name__ for m in models]))
-    create_tables()
-
-    USERNAME = 'testuser@gmail.com'
-    print("Create dummy user: {}".format(USERNAME))
-    u = User.create(username=USERNAME, email=USERNAME)
-
-    print("Inserting dummy projects...")
-    for i in range(5):
-        p = Project.create(name='test project {}'.format(i))
-        print(p)
-
-    print("Creating dummy project owners...")
-    for i in range(3):
-        p = Project.get(Project.id == i + 1)
-        up = UserProject.create(user=u, project=p)
-
-    print('ASSERT User should have 3 projects')
-    print(to_json(p.all('testuser@gmail.com')))
-    assert(len(list(p.all('testuser@gmail.com'))) == 3)
-
-    print("Inserting dummy dataset and time series...")
-    file_uris = ['/dir/ts{}.npz'.format(i) for i in range(3)]
-    d = Dataset.add(name='test dataset', project=p, file_uris=file_uris)
-
-    print("Inserting dummy featureset...")
-    test_file = File.get()
-    f = Featureset.create(project=p, dataset=d, name='test featureset',
-                          features_list=['amplitude'], file=test_file)
-
-    print("Inserting dummy model...")
-    m = Model.create(project=p, featureset=f, name='test model',
-                     params={'n_estimators': 10}, type='RFC',
-                     file=test_file)
-
-    print("Inserting dummy prediction...")
-    pr = Prediction.create(project=p, model=m, file=test_file, dataset=d)
