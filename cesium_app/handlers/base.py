@@ -55,7 +55,7 @@ class BaseHandler(PSABaseHandler):
                 models.User.get(username=username)
             except models.User.DoesNotExist:
                 models.User.create(username=username, email=username)
-            return 'testuser@gmail.com'
+            return username
 
         user_id = self.get_secure_cookie('user_id')
         if user_id is None:
