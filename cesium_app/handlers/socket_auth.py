@@ -15,8 +15,8 @@ class SocketAuthTokenHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         if self.current_user is None:
-            print('! No current user while authenticating socket.')
-            print('! This should NEVER happen.')
+            raise RuntimeError('No current user while authenticating socket. '
+                               'This should NEVER happen.')
 
         secret = cfg['app']['secret-key']
         token = jwt.encode({
