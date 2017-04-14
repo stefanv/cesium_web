@@ -1,5 +1,4 @@
 import tornado.web
-from tornado.web import url
 
 from .config import cfg
 
@@ -22,7 +21,7 @@ from .handlers import (
     PredictRawDataHandler,
     ProfileHandler,
     LogoutHandler
-    )
+)
 
 
 def make_app():
@@ -48,16 +47,16 @@ def make_app():
 
         'SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL': True,
 
-        'SOCIAL_AUTH_GOOGLE_OAUTH2_KEY': \
-          cfg['server']['auth']['google_oauth2_key'],
+        'SOCIAL_AUTH_GOOGLE_OAUTH2_KEY':
+            cfg['server']['auth']['google_oauth2_key'],
         'SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET': \
-          cfg['server']['auth']['google_oauth2_secret'],
+            cfg['server']['auth']['google_oauth2_secret'],
     }
 
     if settings['cookie_secret'] == 'abc01234':
         print('!' * 80)
-        print('  Your server is insecure. Please update the secret string in the')
-        print('  configuration file!')
+        print('  Your server is insecure. Please update the secret string ')
+        print('  in the configuration file!')
         print('!' * 80)
 
     handlers = SOCIAL_AUTH_ROUTES + [
@@ -79,6 +78,11 @@ def make_app():
         (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': 'static/'}),
         (r'/(favicon.png)', tornado.web.StaticFileHandler, {'path': 'static/'})
     ]
+
+    if cfg['server']['auth']['debug_login']:
+        settings['SOCIAL_AUTH_AUTHENTICATION_BACKENDS'] = (
+            'cesium_app.psa.FakeGoogleOAuth2',
+        )
 
     app = tornado.web.Application(handlers, **settings)
     app.cfg = cfg

@@ -1,5 +1,6 @@
 SHELL = /bin/bash
 SUPERVISORD=supervisord
+SUPERVISORCTL=supervisorctl -c conf/supervisord_common.conf
 
 .DEFAULT_GOAL := run
 
@@ -34,10 +35,23 @@ log: paths
 	./tools/watch_logs.py
 
 run: paths dependencies
-	$(SUPERVISORD) -c conf/supervisord.conf
+	@echo "Supervisor will now fire up various micro-services."
+	@echo
+	@echo " - Please run \`make log\` in another terminal to view logs"
+	@echo " - Press Ctrl-D to abort the server"
+	@echo " - Type \`status\` too see microservice status"
+	@echo
+	@$(SUPERVISORD) -c conf/supervisord.conf &
+	
+	@echo "Entering supervisor control panel."
+	@sleep 0.5 && $(SUPERVISORCTL) -i status
+	
+	@echo -n "Shutting down supervisord..."
+	@$(SUPERVISORCTL) shutdown
 
 debug:
 	$(SUPERVISORD) -c conf/supervisord_debug.conf
+	echo "TODO: Create debugging config file"
 
 # Attach to terminal of running webserver; useful to, e.g., use pdb
 attach:

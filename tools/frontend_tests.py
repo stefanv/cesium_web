@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
-import subprocess
-import os
 import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+import subprocess
 from os.path import join as pjoin
 import time
 import socket
@@ -12,10 +14,14 @@ try:
 except ImportError:
     import httplib as http
 
-from cesium_app.model_util import reset_tables
+from cesium_app.model_util import clear_tables
 
 
 base_dir = os.path.abspath(pjoin(os.path.dirname(__file__), '..'))
+if len(sys.argv) > 1:
+    test_spec = sys.argv[1]
+else:
+    test_spec = pjoin(base_dir, 'cesium_app', 'tests')
 
 
 def add_test_yaml():
@@ -30,7 +36,12 @@ def add_test_yaml():
 
             server:
                 url: http://localhost:5000
-                multi_user: False
+                multi_user: True
+                auth:
+                  debug_login: True
+                  google_oauth2_key:
+                  google_oauth2_secret:
+
         '''))
 
 
@@ -42,7 +53,7 @@ if __name__ == '__main__':
     add_test_yaml()
     clear_tables()
 
-    web_client = subprocess.Popen(['make'], cwd=base_dir)
+    web_client = subprocess.Popen(['make', 'run'], cwd=base_dir)
 
     print('[test_frontend] Waiting for supervisord to launch all server processes...')
 
@@ -77,9 +88,9 @@ if __name__ == '__main__':
         else:
             print('[test_frontend] Verified server availability')
 
-        print('[test_frontend] Launching pytest...')
-        test_dir = pjoin(base_dir, 'cesium_app', 'tests')
-        status = subprocess.call(['py.test', '--verbose', test_dir])
+        print('[test_frontend] Launching pytest on {}...'.format(test_spec))
+
+        status = subprocess.call(['py.test', '--verbose', test_spec])
     except:
         raise
     finally:

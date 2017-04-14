@@ -10,8 +10,11 @@ from social_peewee.storage import (
     PeeweeNonceMixin, PeeweePartialMixin, PeeweeUserMixin
 )
 
+from social_core.backends.google import GoogleOAuth2
+
 import peewee as pw
 from .models import BaseModel, User as AppUser, db
+from .config import cfg
 
 
 database_proxy.initialize(db)
@@ -54,3 +57,14 @@ class TornadoPeeweeStorage(BasePeeweeStorage):
         pass
 
     user = UserSocialAuth
+
+
+class FakeGoogleOAuth2(GoogleOAuth2):
+    AUTHORIZATION_URL = cfg['server']['url'] + '/fakeoauth2/auth'
+    ACCESS_TOKEN_URL = cfg['server']['url'] + '/fakeoauth2/token'
+
+    def user_data(self, access_token, *args, **kwargs):
+        return {
+            'id': 'testuser@gmail.com',
+            'emails': [{'value': 'testuser@gmail.com', 'type': 'home'}]
+        }
