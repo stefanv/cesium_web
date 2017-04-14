@@ -2,6 +2,8 @@ import tornado.web
 from tornado.web import RequestHandler
 from tornado.httputil import url_concat
 import tornado.ioloop
+import uuid
+
 
 class FakeGoogleOAuth2AuthHandler(RequestHandler):
     def get(self):
@@ -15,9 +17,10 @@ class FakeGoogleOAuth2AuthHandler(RequestHandler):
 class FakeGoogleOAuth2TokenHandler(RequestHandler):
     def post(self):
         self.get_argument('code') == 'fake-authorization-code'
-        # issue a fake token
+
+        fake_token = str(uuid.uuid4())
         self.write({
-            'access_token': 'fake-access-token',
+            'access_token': fake_token,
             'expires_in': 'never-expires'
         })
 
