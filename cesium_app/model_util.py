@@ -5,6 +5,7 @@ from contextlib import contextmanager
 
 from cesium_app import models, psa
 from cesium_app.json_util import to_json
+from cesium_app.config import cfg
 
 
 @contextmanager
@@ -31,6 +32,7 @@ all_models = app_models + psa_models
 
 
 def drop_tables():
+    print('Dropping tables on database "{}"'.format(cfg['database']['database']))
     models.db.drop_tables(all_models, safe=True, cascade=True)
 
 
