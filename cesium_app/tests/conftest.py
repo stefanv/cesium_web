@@ -6,6 +6,9 @@ import distutils.spawn
 import types
 from cesium_app.config import cfg
 from cesium_app import models as m
+from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
+
 
 @pytest.fixture(scope='module', autouse=True)
 def driver(request):
@@ -35,10 +38,22 @@ def driver(request):
 
     driver._get = driver.get
     def get(self, uri):
-        return self._get(cfg['server']['url'] + uri)
+        d = self._get(cfg['server']['url'] + uri)
+        return d
 
     driver.set_window_size(1920, 1080)
     driver.get = types.MethodType(get, driver)
+
+    # Authenticate by clicking login button
+    driver.get('/')
+    try:
+        driver.implicitly_wait(1)
+        driver.find_element_by_xpath('//a[@href="login/google-oauth2"]').click()
+    except NoSuchElementException:
+        # Already logged in
+        pass
+    driver.implicitly_wait(1)
+    assert driver.find_element_by_xpath('//div[contains(text(), "testuser@gmail.com")]')
 
     return driver
 
