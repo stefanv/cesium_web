@@ -8,6 +8,11 @@ from cesium_app.config import cfg
 from cesium_app import models as m
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
+from seleniumrequests.request import RequestMixin
+
+
+class MyCustomWebDriver(RequestMixin, webdriver.Chrome):
+    pass
 
 
 @pytest.fixture(scope='module', autouse=True)
@@ -27,7 +32,7 @@ def driver(request):
     prefs = {'download.default_directory' : '/tmp'}
     chrome_options.add_experimental_option('prefs', prefs)
 
-    driver = webdriver.Chrome(chrome_options=chrome_options)
+    driver = MyCustomWebDriver(chrome_options=chrome_options)
 
     driver.set_window_size(1920, 1080)
 
