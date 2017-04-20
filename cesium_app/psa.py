@@ -13,7 +13,7 @@ from social_peewee.storage import (
 from social_core.backends.google import GoogleOAuth2
 
 import peewee as pw
-from .models import BaseModel, User as AppUser, db
+from .models import BaseModel, User, db
 from .config import cfg
 
 
@@ -25,11 +25,11 @@ class UserSocialAuth(BaseModel, PeeweeUserMixin):
     This model is used by PSA to store whatever it needs during
     authentication, e.g. token expiration time, etc.
     """
-    user = pw.ForeignKeyField(AppUser, related_name='social_auth')
+    user = pw.ForeignKeyField(User, related_name='social_auth')
 
     @classmethod
     def user_model(cls):
-        return AppUser
+        return User
 
 
 class TornadoPeeweeStorage(BasePeeweeStorage):
