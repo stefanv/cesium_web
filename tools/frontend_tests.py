@@ -90,7 +90,7 @@ if __name__ == '__main__':
 
         print('[test_frontend] Launching pytest on {}...'.format(test_spec))
 
-        status = subprocess.call(['py.test', '--verbose', test_spec])
+        status = subprocess.call(['python', '-m', 'pytest', '--verbose', test_spec])
     except:
         raise
     finally:
