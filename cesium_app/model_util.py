@@ -28,7 +28,7 @@ def _filter_pw_models(members):
 
 app_models = _filter_pw_models(inspect.getmembers(models))
 psa_models = _filter_pw_models(inspect.getmembers(psa))
-all_models = app_models + psa_models
+all_models = set(app_models + psa_models)
 
 
 def drop_tables():
