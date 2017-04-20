@@ -63,7 +63,7 @@ def clear_tables():
     create_tables()
 
 
-if __name__ == "__main__":
+def insert_test_data():
     with status("Dropping all tables"):
         drop_tables()
 
@@ -107,3 +107,7 @@ if __name__ == "__main__":
 
     with status("Inserting dummy prediction... "):
         pr = models.Prediction.create(project=p, model=m, file=test_file, dataset=d)
+
+
+if __name__ == "__main__":
+    insert_test_data()

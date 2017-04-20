@@ -16,7 +16,7 @@ db_init:
 	@./tools/silent_monitor.py ./tools/db_init.sh
 
 db_test_data:
-	@PYTHONPATH=. python ./cesium_app/models.py
+	@PYTHONPATH=. python -c 'from cesium_app.model_util import insert_test_data; insert_test_data()'
 
 $(bundle): webpack.config.js package.json
 	$(webpack)
