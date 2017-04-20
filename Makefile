@@ -61,10 +61,10 @@ clean:
 	rm $(bundle)
 
 test_headless: paths dependencies
-	PYTHONPATH='.' xvfb-run ./tools/frontend_tests.py
+	PYTHONPATH='.' xvfb-run ./tools/test_frontend.py
 
 test: paths dependencies
-	PYTHONPATH='.' ./tools/frontend_tests.py
+	PYTHONPATH='.' ./tools/test_frontend.py
 
 status:
 	PYTHONPATH='.' ./tools/supervisor_status.py

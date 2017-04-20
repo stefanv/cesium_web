@@ -73,9 +73,9 @@ To execute the test suite:
 - Optional: install xfvb for headless tests (only available on Linux)
 - `make test_headless` or `make test`
 
-  To run a single test, fire up the web server (`make debug`), then:
+  To run a single test:
 
-  `python -m pytest cesium_app/tests/frontend/test_build_model.py::test_build_model_rfc`
+  `./tools/test_frontend.py cesium_app/tests/frontend/test_build_model.py::test_build_model_rfc`
 
   Prepend the above with `xvfb-run` to run in headless mode.
 
