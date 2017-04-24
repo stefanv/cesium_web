@@ -50,7 +50,10 @@ def create_tables(retry=5):
     for i in range(1, retry + 1):
         try:
             models.db.create_tables(all_models, safe=True)
-            print('Created all tables.')
+
+            print('Created tables:')
+            for m in all_models:
+                print(' - {}'.format(m.__name__))
 
             return
 
