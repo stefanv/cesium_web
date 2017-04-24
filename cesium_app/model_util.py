@@ -26,9 +26,15 @@ def _filter_pw_models(members):
                 and not obj == models.BaseModel]
 
 
+# This import hack is necessary to get tables to be created in the correct
+# order
+from .models import *
+from .psa import *
+
+
 app_models = _filter_pw_models(inspect.getmembers(models))
 psa_models = _filter_pw_models(inspect.getmembers(psa))
-all_models = set(app_models + psa_models)
+all_models = app_models + psa_models
 
 
 def drop_tables():
@@ -44,9 +50,7 @@ def create_tables(retry=5):
     for i in range(1, retry + 1):
         try:
             models.db.create_tables(all_models, safe=True)
-            print('Created tables:')
-            for m in all_models:
-                print(' - {}'.format(m.__name__))
+            print('Created all tables.')
 
             return
 
