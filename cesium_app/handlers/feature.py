@@ -6,7 +6,6 @@ from cesium.features import dask_feature_graph
 
 from .base import BaseHandler, AccessError
 from ..models import Dataset, Featureset, Project, File
-from ..config import cfg
 
 from os.path import join as pjoin
 import uuid
@@ -80,7 +79,7 @@ class FeatureHandler(BaseHandler):
         if not dataset.is_owned_by(self.current_user):
             raise AccessError('No such data set')
 
-        fset_path = pjoin(cfg['paths']['features_folder'],
+        fset_path = pjoin(self.cfg['paths:features_folder'],
                           '{}_featureset.npz'.format(uuid.uuid4()))
 
         fset = Featureset.create(name=featureset_name,

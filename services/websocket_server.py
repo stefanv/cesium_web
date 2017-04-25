@@ -7,13 +7,13 @@ import jwt
 
 import collections
 
-from cesium_app import config
-secret = config.cfg['app']['secret-key']
+from cesium_app.app_server import load_config
+secret = load_config()['app:secret-key']
+
+if secret is None:
+    raise RuntimeError('We need a secret key to communicate with the server!')
 
 ctx = zmq.Context()
-
-
-# Could also use: http://aaugustin.github.io/websockets/
 
 
 class WebSocket(websocket.WebSocketHandler):

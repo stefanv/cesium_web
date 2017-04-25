@@ -15,6 +15,9 @@ dependencies:
 db_init:
 	@./tools/silent_monitor.py ./tools/db_init.sh
 
+db_clear:
+	PYTHONPATH=. ./tools/db_clear.py
+
 $(bundle): webpack.config.js package.json
 	$(webpack)
 
@@ -38,17 +41,13 @@ run: paths dependencies
 	@echo " - Press Ctrl-D to abort the server"
 	@echo " - Type \`status\` too see microservice status"
 	@echo
-	@$(SUPERVISORD) -c conf/supervisord.conf &
+	@$(SUPERVISORD) -c conf/supervisord_testing.conf &
 	
 	@echo "Entering supervisor control panel."
 	@sleep 0.5 && $(SUPERVISORCTL) -i status
 	
 	@echo -n "Shutting down supervisord..."
 	@$(SUPERVISORCTL) shutdown
-
-debug:
-	$(SUPERVISORD) -c conf/supervisord_debug.conf
-	echo "TODO: Create debugging config file"
 
 # Attach to terminal of running webserver; useful to, e.g., use pdb
 attach:

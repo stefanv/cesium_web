@@ -5,7 +5,6 @@ from contextlib import contextmanager
 
 from cesium_app import models, psa
 from cesium_app.json_util import to_json
-from cesium_app.config import cfg
 
 
 @contextmanager
@@ -26,19 +25,13 @@ def _filter_pw_models(members):
                 and not obj == models.BaseModel]
 
 
-# This import hack is necessary to get tables to be created in the correct
-# order
-from .models import *
-from .psa import *
-
-
 app_models = _filter_pw_models(inspect.getmembers(models))
 psa_models = _filter_pw_models(inspect.getmembers(psa))
 all_models = app_models + psa_models
 
 
 def drop_tables():
-    print('Dropping tables on database "{}"'.format(cfg['database']['database']))
+    print('Dropping tables on database "{}"'.format(models.db.database))
     models.db.drop_tables(all_models, safe=True, cascade=True)
 
 
@@ -49,6 +42,7 @@ def create_tables(retry=5):
     """
     for i in range(1, retry + 1):
         try:
+            print('Creating tables on db "{}"'.format(models.db.database))
             models.db.create_tables(all_models, safe=True)
 
             print('Created tables:')

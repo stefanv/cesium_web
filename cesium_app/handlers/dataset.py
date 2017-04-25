@@ -1,7 +1,6 @@
 from .base import BaseHandler, AccessError
 from ..models import Project, Dataset
 from .. import util
-from ..config import cfg
 
 from cesium import data_management, time_series
 from cesium.util import shorten_fname
@@ -40,7 +39,7 @@ class DatasetHandler(BaseHandler):
 
         zipfile_name = (str(uuid.uuid4()) + "_" +
                         util.secure_filename(zipfile.filename))
-        zipfile_path = pjoin(cfg['paths']['upload_folder'], zipfile_name)
+        zipfile_path = pjoin(self.cfg['paths:upload_folder'], zipfile_name)
 
         with open(zipfile_path, 'wb') as f:
             f.write(zipfile['body'])
@@ -50,7 +49,7 @@ class DatasetHandler(BaseHandler):
             headerfile = self.request.files['headerFile'][0]
             headerfile_name = (str(uuid.uuid4()) + "_" +
                                util.secure_filename(headerfile.filename))
-            headerfile_path = pjoin(cfg['paths']['upload_folder'], headerfile_name)
+            headerfile_path = pjoin(self.cfg['paths:upload_folder'], headerfile_name)
 
             with open(headerfile_path, 'wb') as f:
                 f.write(headerfile['body'])
@@ -62,7 +61,7 @@ class DatasetHandler(BaseHandler):
         # TODO this should give unique names to the time series files
         ts_paths = data_management.parse_and_store_ts_data(
             zipfile_path,
-            cfg['paths']['ts_data_folder'],
+            self.cfg['paths:ts_data_folder'],
             headerfile_path)
         meta_features = list(time_series.load(ts_paths[0]).meta_features.keys())
         unique_ts_paths = [os.path.join(os.path.dirname(ts_path),

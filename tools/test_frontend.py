@@ -2,6 +2,7 @@
 
 import sys
 import os
+import pathlib
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import subprocess
@@ -16,6 +17,8 @@ except ImportError:
 
 from cesium_app.model_util import clear_tables
 
+TEST_CONFIG = '_cesium_test.yaml'
+
 
 base_dir = os.path.abspath(pjoin(os.path.dirname(__file__), '..'))
 if len(sys.argv) > 1:
@@ -25,10 +28,10 @@ else:
 
 
 def add_test_yaml():
-    print('Creating cesium-test.yaml')
+    print('Creating {}'.format('_cesium_test.yaml'))
 
     from textwrap import dedent
-    with open('cesium-test.yaml', 'w') as f:
+    with open(TEST_CONFIG, 'w') as f:
         f.write(dedent('''
             database:
                 database: cesium_test
@@ -46,11 +49,16 @@ def add_test_yaml():
 
 
 def delete_test_yaml():
-    os.remove('cesium-test.yaml')
+    os.remove(TEST_CONFIG)
 
 
 if __name__ == '__main__':
     add_test_yaml()
+
+    # Initialize the test database connection
+    from cesium_app.tests.conftest import init_db
+    init_db()
+
     clear_tables()
 
     web_client = subprocess.Popen(['make', 'run'], cwd=base_dir)

@@ -8,7 +8,7 @@ from os.path import join as pjoin
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
-from cesium_app.config import cfg
+from ..conftest import cfg
 import json
 from cesium_app.tests.fixtures import (create_test_project, create_test_dataset,
                                        create_test_featureset, create_test_model,
@@ -259,14 +259,14 @@ def test_predict_specific_ts_name(driver):
                 'ts_names': ['217801'],
                 'modelID': m.id}
         response = driver.request(
-            'POST', '{}/predictions'.format(cfg['server']['url']),
+            'POST', '{}/predictions'.format(cfg['server:url']),
             data=json.dumps(data)).json()
         assert response['status'] == 'success'
 
         n_secs = 0
         while n_secs < 5:
             pred_info = driver.request('GET', '{}/predictions/{}'.format(
-                cfg['server']['url'], response['data']['id'])).json()
+                cfg['server:url'], response['data']['id'])).json()
             if pred_info['status'] == 'success' and pred_info['data']['finished']:
                 assert isinstance(pred_info['data']['results']['217801']
                                   ['features']['total_time'],

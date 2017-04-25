@@ -1,5 +1,4 @@
 from .base import BaseHandler
-from ..config import cfg
 from ..json_util import to_json
 
 import tornado.web
@@ -18,7 +17,7 @@ class SocketAuthTokenHandler(BaseHandler):
             raise RuntimeError('No current user while authenticating socket. '
                                'This should NEVER happen.')
 
-        secret = cfg['app']['secret-key']
+        secret = self.cfg['app:secret-key']
         token = jwt.encode({
             'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=15),
             'username': self.current_user

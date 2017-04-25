@@ -2,13 +2,28 @@
 
 import pytest
 import os
+import pathlib
 import distutils.spawn
 import types
-from cesium_app.config import cfg
-from cesium_app import models as m
+from cesium_app.config import Config
+from cesium_app import models
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from seleniumrequests.request import RequestMixin
+
+print('Loading test configuration from _cesium_test.yaml')
+basedir = pathlib.Path(os.path.dirname(__file__))
+cfg = Config([(basedir/'../../cesium.yaml.example').absolute(),
+              (basedir/'../../_cesium_test.yaml').absolute()])
+
+def init_db():
+    print('Setting test database to:', cfg['database'])
+    models.db.init(**cfg['database'])
+
+    return cfg
+
+
+init_db()
 
 
 class MyCustomWebDriver(RequestMixin, webdriver.Chrome):
@@ -66,13 +81,13 @@ def driver(request):
 @pytest.fixture(scope='session', autouse=True)
 def remove_test_files(request):
     def teardown():
-        for f in m.File.select():
+        for f in models.File.select():
             try:
                 os.remove(f.file.uri)
             except:
                 pass
     try:
-        m.db.connect()
+        models.db.connect()
         request.addfinalizer(teardown)
     except:  # skip teardown if DB not available
         pass

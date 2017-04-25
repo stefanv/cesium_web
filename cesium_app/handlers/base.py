@@ -13,13 +13,13 @@ from social_tornado.handlers import BaseHandler as PSABaseHandler
 from .. import models
 from ..json_util import to_json
 from ..flow import Flow
-from ..config import cfg
 
 import time
 
 
 class BaseHandler(PSABaseHandler):
     def prepare(self):
+        self.cfg = self.application.cfg
         self.flow = Flow()
 
         # Remove slash prefixes from arguments
@@ -49,7 +49,7 @@ class BaseHandler(PSABaseHandler):
         return super(BaseHandler, self).prepare()
 
     def get_current_user(self):
-        if not cfg['server']['multi_user']:
+        if not self.cfg['server:multi_user']:
             username = 'testuser@gmail.com'
             try:
                 models.User.get(username=username)

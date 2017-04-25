@@ -1,8 +1,11 @@
 import tornado.web
 
-from .config import cfg
-
+import os
 import sys
+import pathlib
+
+from .config import Config
+from . import models
 
 # This provides `login`, `complete`, and `disconnect` endpoints
 from social_tornado.routes import SOCIAL_AUTH_ROUTES
@@ -24,14 +27,51 @@ from .handlers import (
 )
 
 
-def make_app():
+def load_config(config_files=None):
+    if config_files is None:
+        basedir = pathlib.Path(os.path.dirname(__file__))/'..'
+        config_files = (basedir/'cesium.yaml.example', basedir/'cesium.yaml')
+        config_files = (c.absolute() for c in config_files)
+
+    cfg = Config(config_files)
+
+    return cfg
+
+
+def make_app(config_files=None):
     """Create and return a `tornado.web.Application` object with specified
     handlers and settings.
+
+    Parameters
+    ----------
+    config_files : list of str
+        Filenames of configuration files, loaded in the order specified.
+        By default, 'cesium.yaml.example' is used for defaults and 'cesium.yaml'
+        for further customizations.
+
     """
+    # Cesium settings
+    cfg = load_config(config_files)
+
+    if cfg['cookie_secret'] == 'abc01234':
+        print('!' * 80)
+        print('  Your server is insecure. Please update the secret string ')
+        print('  in the configuration file!')
+        print('!' * 80)
+
+    for path_name, path in cfg['paths'].items():
+        if not os.path.exists(path):
+            print("Creating %s" % path)
+            try:
+                os.makedirs(path)
+            except Exception as e:
+                print(e)
+
+    # Tornado settings
     settings = {
         'template_path': './static',
         'autoreload': '--debug' in sys.argv,
-        'cookie_secret': cfg['app']['secret-key'],
+        'cookie_secret': cfg['app:secret-key'],
         'login_url': '/',
 
         # Python Social Auth configuration
@@ -49,16 +89,10 @@ def make_app():
         'SOCIAL_AUTH_SESSION_EXPIRATION': True,
 
         'SOCIAL_AUTH_GOOGLE_OAUTH2_KEY':
-            cfg['server']['auth']['google_oauth2_key'],
+            cfg['server:auth:google_oauth2_key'],
         'SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET': \
-            cfg['server']['auth']['google_oauth2_secret'],
+            cfg['server:auth:google_oauth2_secret'],
     }
-
-    if settings['cookie_secret'] == 'abc01234':
-        print('!' * 80)
-        print('  Your server is insecure. Please update the secret string ')
-        print('  in the configuration file!')
-        print('!' * 80)
 
     handlers = SOCIAL_AUTH_ROUTES + [
         (r'/project(/.*)?', ProjectHandler),
@@ -80,12 +114,13 @@ def make_app():
         (r'/(favicon.png)', tornado.web.StaticFileHandler, {'path': 'static/'})
     ]
 
-    if cfg['server']['auth']['debug_login']:
+    if cfg['server:auth:debug_login']:
         settings['SOCIAL_AUTH_AUTHENTICATION_BACKENDS'] = (
             'cesium_app.psa.FakeGoogleOAuth2',
         )
 
     app = tornado.web.Application(handlers, **settings)
+    models.db.init(**cfg['database'])
     app.cfg = cfg
 
     return app

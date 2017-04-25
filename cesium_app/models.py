@@ -10,12 +10,12 @@ from playhouse.shortcuts import model_to_dict
 from playhouse import signals
 
 from cesium_app.json_util import to_json
-from cesium_app.config import cfg
 from cesium import featurize
 
 
-db = pw.PostgresqlDatabase(autocommit=True, autorollback=True,
-                           **cfg['database'])
+# The db has to be initialized later; this is done by the app itself
+# See `app_server.py`
+db = pw.PostgresqlDatabase(None, autocommit=True, autorollback=True)
 
 
 class BaseModel(signals.Model):

@@ -14,7 +14,6 @@ from social_core.backends.google import GoogleOAuth2
 
 import peewee as pw
 from .models import BaseModel, User, db
-from .config import cfg
 
 
 database_proxy.initialize(db)
@@ -60,8 +59,8 @@ class TornadoPeeweeStorage(BasePeeweeStorage):
 
 
 class FakeGoogleOAuth2(GoogleOAuth2):
-    AUTHORIZATION_URL = cfg['server']['url'] + '/fakeoauth2/auth'
-    ACCESS_TOKEN_URL = cfg['server']['url'] + '/fakeoauth2/token'
+    AUTHORIZATION_URL = 'http://localhost:63000/fakeoauth2/auth'
+    ACCESS_TOKEN_URL = 'http://localhost:63000/fakeoauth2/token'
 
     def user_data(self, access_token, *args, **kwargs):
         return {

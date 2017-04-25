@@ -1,6 +1,6 @@
 from cesium_app.tests.fixtures import (create_test_project, create_test_dataset,
                                        create_test_featureset, create_test_model)
-from cesium_app.config import cfg
+from ..conftest import cfg
 import json
 
 
@@ -11,7 +11,7 @@ def test_predict_raw_data(driver):
         impute_kwargs = {'strategy': 'constant', 'value': None}
         query_string = ('{}/predict_raw_data?ts_data={}'
                         '&modelID={}&impute_kwargs={}').format(
-                            cfg['server']['url'], json.dumps(ts_data),
+                            cfg['server:url'], json.dumps(ts_data),
                             json.dumps(m.id), json.dumps(impute_kwargs))
         response = driver.request('POST', query_string).json()
         assert response['status'] == 'success'
