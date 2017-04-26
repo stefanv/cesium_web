@@ -21,7 +21,7 @@ class Config(dict):
 
         val = self
         for key in keys:
-            val = dict.get(val, key, None)
+            val = val.get(key)
             if val is None:
                 return None
 
