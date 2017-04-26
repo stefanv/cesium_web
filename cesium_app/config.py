@@ -17,10 +17,7 @@ class Config(dict):
             print('[cesium] Loaded {}'.format(os.path.relpath(filename)))
 
     def __getitem__(self, key):
-        if ':' in key:
-            keys = key.split(':')
-        else:
-            keys = (key,)
+        keys = key.split(':')
 
         val = self
         for key in keys:
