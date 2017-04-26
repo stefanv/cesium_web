@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
     clear_tables()
 
-    web_client = subprocess.Popen(['make', 'run'], cwd=base_dir)
+    web_client = subprocess.Popen(['make', 'testrun'], cwd=base_dir)
 
     print('[test_frontend] Waiting for supervisord to launch all server processes...')
 

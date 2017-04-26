@@ -9,7 +9,7 @@ webpack = ./node_modules/.bin/webpack
 
 
 dependencies:
-	@./tools/silent_monitor.py pip install -r requirements.txt
+	./tools/install_python_deps.py
 	@./tools/silent_monitor.py ./tools/check_js_deps.sh
 
 db_init:
@@ -41,10 +41,10 @@ run: paths dependencies
 	@echo " - Press Ctrl-D to abort the server"
 	@echo " - Type \`status\` too see microservice status"
 	@echo
-	@$(SUPERVISORD) -c conf/supervisord_testing.conf &
+	@$(SUPERVISORD) -c conf/supervisord.conf &
 	
 	@echo "Entering supervisor control panel."
-	@sleep 0.5 && $(SUPERVISORCTL) -i status
+	@sleep 1 && $(SUPERVISORCTL) -i status
 	
 	@echo -n "Shutting down supervisord..."
 	@$(SUPERVISORCTL) shutdown
@@ -52,6 +52,9 @@ run: paths dependencies
 # Attach to terminal of running webserver; useful to, e.g., use pdb
 attach:
 	supervisorctl -c conf/supervisord_common.conf fg app
+
+testrun:
+	$(SUPERVISORD) -c conf/supervisord_testing.conf
 
 clean:
 	rm $(bundle)
@@ -61,6 +64,9 @@ test_headless: paths dependencies
 
 test: paths dependencies
 	PYTHONPATH='.' ./tools/test_frontend.py
+
+stop:
+	$(SUPERVISORCTL) stop all
 
 status:
 	PYTHONPATH='.' ./tools/supervisor_status.py

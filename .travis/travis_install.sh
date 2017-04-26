@@ -13,8 +13,12 @@ pip install --upgrade pip
 hash -d pip  # find upgraded pip
 section_end "install.base.requirements"
 
-
-section "install.cesium.requirements"
+section "install.cesium_web.requirements"
+npm -g install npm@latest
+npm --version
+node --version
+make dependencies
+make check-js-updates
 
 if [[ -n ${TRIGGERED_FROM_REPO} ]]; then
     mkdir cesium-clone
@@ -25,24 +29,9 @@ if [[ -n ${TRIGGERED_FROM_REPO} ]]; then
     git checkout -b ${TRIGGERED_FROM_BRANCH} ${TRIGGERED_FROM_SHA}
     pip install .
     cd ..
-else
-    pip install -e git://github.com/cesium-ml/cesium.git#egg=cesium
 fi
 
-# Remove Cesium from requirements, already installed
-cat requirements.txt | grep -v cesium > _ && mv _ requirements.txt
-
-pip install --retries 3 -r requirements.txt
 pip list --format=columns
-section_end "install.cesium.requirements"
-
-
-section "install.cesium_web.requirements"
-npm -g install npm@latest
-npm --version
-node --version
-make dependencies
-make check-js-updates
 section_end "install.cesium_web.requirements"
 
 
