@@ -4,10 +4,7 @@ import subprocess
 import os
 from os.path import join as pjoin
 
-with open(pjoin(os.path.dirname(__file__), '../requirements.txt')) as f:
-    deps = f.readlines()
-
-for dep in deps:
+for dep in open(pjoin(os.path.dirname(__file__), '../requirements.txt')):
     if 'cesium' in dep and 'dev' in dep:
         try:
             import cesium
