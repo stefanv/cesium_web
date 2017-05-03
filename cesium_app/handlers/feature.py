@@ -4,7 +4,7 @@ import tornado.web
 from cesium import featurize, time_series
 from cesium.features import dask_feature_graph
 
-from .base import BaseHandler, AccessError
+from baselayer.app.handlers.base import BaseHandler, AccessError
 from ..models import Dataset, Featureset, Project, File
 
 from os.path import join as pjoin

@@ -1,4 +1,4 @@
-from .base import BaseHandler, AccessError
+from baselayer.app.handlers.base import BaseHandler, AccessError
 from .mainpage import MainPageHandler
 from .project import ProjectHandler
 from .dataset import DatasetHandler

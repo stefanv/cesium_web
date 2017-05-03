@@ -1,6 +1,6 @@
 '''Handlers for '/models' route.'''
 
-from .base import BaseHandler, AccessError
+from baselayer.app.handlers.base import BaseHandler, AccessError
 from ..models import Project, Model, Featureset, File
 from ..ext.sklearn_models import (
     model_descriptions as sklearn_model_descriptions,

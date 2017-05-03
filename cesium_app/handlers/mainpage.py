@@ -1,4 +1,4 @@
-from .base import BaseHandler
+from baselayer.app.handlers.base import BaseHandler
 from tornado.web import RequestHandler
 
 class MainPageHandler(BaseHandler):
