@@ -80,7 +80,7 @@ def make_app(config_files=None, debug=False):
 
         # Python Social Auth configuration
         'SOCIAL_AUTH_USER_MODEL': 'cesium_app.models.User',
-        'SOCIAL_AUTH_STORAGE': 'cesium_app.psa.TornadoPeeweeStorage',
+        'SOCIAL_AUTH_STORAGE': 'baselayer.app.psa.TornadoPeeweeStorage',
         'SOCIAL_AUTH_STRATEGY': 'social_tornado.strategy.TornadoStrategy',
         'SOCIAL_AUTH_AUTHENTICATION_BACKENDS': (
             'social_core.backends.google.GoogleOAuth2',
@@ -120,7 +120,7 @@ def make_app(config_files=None, debug=False):
 
     if cfg['server:auth:debug_login']:
         settings['SOCIAL_AUTH_AUTHENTICATION_BACKENDS'] = (
-            'cesium_app.psa.FakeGoogleOAuth2',
+            'baselayer.app.psa.FakeGoogleOAuth2',
         )
 
     app = tornado.web.Application(handlers, **settings)

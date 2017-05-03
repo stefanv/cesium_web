@@ -4,7 +4,8 @@ import time
 import peewee as pw
 from contextlib import contextmanager
 
-from cesium_app import models, psa
+from . import models
+from . import psa
 from .json_util import to_json
 
 
