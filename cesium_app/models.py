@@ -10,30 +10,9 @@ from playhouse.shortcuts import model_to_dict
 from playhouse import signals
 
 from baselayer.app.json_util import to_json
-from baselayer.app.models import BaseModel, db
+from baselayer.app.models import BaseModel, User, db
 
 from cesium import featurize
-
-
-class User(BaseModel):
-    """This model defines any user attributes needed by the web app.
-
-    Other user information needed by the login system is stored in
-    UserSocialAuth.
-
-    """
-    username = pw.CharField(unique=True)
-    email = pw.CharField(unique=True)
-
-    @classmethod
-    def user_model(cls):
-        return User
-
-    def is_authenticated(self):
-        return True
-
-    def is_active(self):
-        return True
 
 
 class Project(BaseModel):

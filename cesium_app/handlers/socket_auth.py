@@ -1,5 +1,5 @@
 from baselayer.app.handlers.base import BaseHandler
-from ..json_util import to_json
+from baselayer.app.json_util import to_json
 
 import tornado.web
 

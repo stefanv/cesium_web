@@ -10,8 +10,8 @@ import tornado.ioloop
 # be used to look up the logged in user.
 from social_tornado.handlers import BaseHandler as PSABaseHandler
 
-from cesium_app import models
-from cesium_app.json_util import to_json
+from .. import models
+from ..json_util import to_json
 from cesium_app.flow import Flow
 
 import time

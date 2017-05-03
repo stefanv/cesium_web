@@ -5,7 +5,7 @@ import peewee as pw
 from contextlib import contextmanager
 
 from cesium_app import models, psa
-from cesium_app.json_util import to_json
+from .json_util import to_json
 
 
 @contextmanager

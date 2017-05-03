@@ -1,5 +1,6 @@
 import peewee as pw
 from playhouse.shortcuts import model_to_dict
+from playhouse import signals
 from .json_util import to_json
 
 
@@ -26,3 +27,24 @@ class BaseModel(signals.Model):
 
     class Meta:
         database = db
+
+
+class User(BaseModel):
+    """This model defines any user attributes needed by the web app.
+
+    Other user information needed by the login system is stored in
+    UserSocialAuth.
+
+    """
+    username = pw.CharField(unique=True)
+    email = pw.CharField(unique=True)
+
+    @classmethod
+    def user_model(cls):
+        return User
+
+    def is_authenticated(self):
+        return True
+
+    def is_active(self):
+        return True
