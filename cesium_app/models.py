@@ -1,6 +1,7 @@
 import datetime
 import os
 import sys
+import inspect
 import time
 import pandas as pd
 
@@ -11,6 +12,7 @@ from playhouse import signals
 
 from baselayer.app.json_util import to_json
 from baselayer.app.models import BaseModel, User, db
+from baselayer.app.model_util import filter_pw_models
 
 from cesium import featurize
 
@@ -221,3 +223,6 @@ class Prediction(BaseModel):
             info['isProbabilistic'] = (len(data['pred_probs']) > 0)
             info['results'] = Prediction.format_pred_data(fset, data)
         return info
+
+
+app_models = filter_pw_models(inspect.getmembers(sys.modules[__name__]))

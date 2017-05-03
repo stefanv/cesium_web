@@ -16,6 +16,7 @@ except ImportError:
     import httplib as http
 
 from baselayer.app.model_util import clear_tables
+from cesium_app import models
 
 try:
     import pytest_randomly
@@ -66,6 +67,7 @@ if __name__ == '__main__':
     init_db()
 
     clear_tables()
+    clear_tables(models.app_models)
 
     web_client = subprocess.Popen(['make', 'testrun'], cwd=base_dir)
 
