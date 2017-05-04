@@ -12,7 +12,7 @@ from social_tornado.handlers import BaseHandler as PSABaseHandler
 
 from .. import models
 from ..json_util import to_json
-from cesium_app.flow import Flow
+from ..flow import Flow
 
 import time
 

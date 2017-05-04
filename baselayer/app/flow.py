@@ -1,5 +1,5 @@
 import zmq
-from baselayer.app.json_util import to_json
+from .json_util import to_json
 
 
 class Flow(object):
