@@ -4,26 +4,33 @@ import os
 import sys
 import pathlib
 
-from baselayer.app.config import Config
-from . import models
+from baselayer.config import Config
+from baselayer import models
 from baselayer.app import model_util
-from baselayer.app import handlers_and_settings
-from baselayer.app import util as baselayer_util
 
 # This provides `login`, `complete`, and `disconnect` endpoints
 from social_tornado.routes import SOCIAL_AUTH_ROUTES
 
 from .handlers import (
-    ProjectHandler,
-    DatasetHandler,
-    FeatureHandler,
-    ModelHandler,
-    PredictionHandler,
-    FeatureListHandler,
-    SklearnModelsHandler,
-    PlotFeaturesHandler,
-    PredictRawDataHandler
+    MainPageHandler,
+    SocketAuthTokenHandler,
+    ProfileHandler,
+    LogoutHandler
 )
+
+
+def load_config(config_files=None):
+    if config_files is None:
+        basedir = pathlib.Path(os.path.dirname(__file__))/'..'
+        config_files = (basedir/'baselayer.yaml.example', basedir/'baselayer.yaml')
+        config_files = (c.absolute() for c in config_files)
+
+    cfg = Config(config_files)
+
+    return cfg
+
+
+cfg = load_config()
 
 
 def make_app(config_files=None, debug=False):
@@ -41,8 +48,8 @@ def make_app(config_files=None, debug=False):
         changed source files are immediately reloaded.
 
     """
-    # Cesium settings
-    cfg = baselayer_util.load_config(config_files)
+    # baselayer settings
+    cfg = load_config(config_files)
 
     if cfg['cookie_secret'] == 'abc01234':
         print('!' * 80)
@@ -57,22 +64,6 @@ def make_app(config_files=None, debug=False):
                 os.makedirs(path)
             except Exception as e:
                 print(e)
-
-    handlers = handlers_and_settings.handlers + [
-        (r'/project(/.*)?', ProjectHandler),
-        (r'/dataset(/.*)?', DatasetHandler),
-        (r'/features(/.*)?', FeatureHandler),
-        (r'/models(/.*)?', ModelHandler),
-        (r'/predictions(/[0-9]+)?', PredictionHandler),
-        (r'/predictions/([0-9]+)/(download)', PredictionHandler),
-        (r'/predict_raw_data', PredictRawDataHandler),
-        (r'/features_list', FeatureListHandler),
-        (r'/sklearn_models', SklearnModelsHandler),
-        (r'/plot_features/(.*)', PlotFeaturesHandler)
-    ]
-
-    settings = handlers_and_settings.settings
-    settings.update({'autoreload': debug})  # Specify additional settings here
 
     app = tornado.web.Application(handlers, **settings)
     models.db.init(**cfg['database'])

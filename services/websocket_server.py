@@ -7,7 +7,7 @@ import jwt
 
 import collections
 
-from cesium_app.app_server import load_config
+from baselayer.app.util import load_config
 secret = load_config()['app:secret-key']
 
 if secret is None:
