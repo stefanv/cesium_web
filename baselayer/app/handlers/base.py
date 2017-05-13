@@ -19,7 +19,7 @@ import time
 
 class BaseHandler(PSABaseHandler):
     def prepare(self):
-        self.cfg = self.application.cfg
+        self._baselayer_cfg = self.application._baselayer_cfg
         self.flow = Flow()
 
         # Remove slash prefixes from arguments
@@ -33,23 +33,10 @@ class BaseHandler(PSABaseHandler):
         if len(self.path_args) == 1 and self.path_args[0] is None:
             self.path_args = []
 
-        # TODO Refactor to be a context manager or utility function
-        N = 5
-        for i in range(1, N + 1):
-            try:
-                if models.db.is_closed():
-                    models.db.connect()
-            except Exception as e:
-                if (i == N):
-                    raise e
-                else:
-                    print('Error connecting to database -- sleeping for a while')
-                    time.sleep(5)
-
         return super(BaseHandler, self).prepare()
 
     def get_current_user(self):
-        if not self.cfg['server:multi_user']:
+        if not self._baselayer_cfg['server:multi_user']:
             username = 'testuser@gmail.com'
             try:
                 models.User.get(username=username)

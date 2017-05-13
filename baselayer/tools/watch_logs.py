@@ -86,9 +86,9 @@ def logs_from_config(supervisor_conf):
 
 
 basedir = pjoin(os.path.dirname(__file__), '..')
-logdir = pjoin(basedir, 'log')
-watched = logs_from_config(pjoin(basedir, 'conf/supervisord_common.conf'))
-watched.extend(logs_from_config(pjoin(basedir, 'conf/supervisord.conf')))
+logdir = '../log'
+watched = logs_from_config(pjoin(basedir, 'conf/supervisor/common.conf'))
+watched.extend(logs_from_config(pjoin(basedir, 'conf/supervisor/app.conf')))
 
 
 sys.path.insert(0, basedir)

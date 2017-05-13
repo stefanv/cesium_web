@@ -4,25 +4,14 @@ import os
 import sys
 import pathlib
 
-from baselayer.config import Config
-from baselayer import models
-from baselayer.app import model_util
+from baselayer.app import Config
 
-# This provides `login`, `complete`, and `disconnect` endpoints
-from social_tornado.routes import SOCIAL_AUTH_ROUTES
-
-from .handlers import (
-    MainPageHandler,
-    SocketAuthTokenHandler,
-    ProfileHandler,
-    LogoutHandler
-)
 
 
 def load_config(config_files=None):
     if config_files is None:
         basedir = pathlib.Path(os.path.dirname(__file__))/'..'
-        config_files = (basedir/'baselayer.yaml.example', basedir/'baselayer.yaml')
+        config_files = (basedir/'example_app.yaml.example', basedir/'example_app.yaml')
         config_files = (c.absolute() for c in config_files)
 
     cfg = Config(config_files)
@@ -33,7 +22,7 @@ def load_config(config_files=None):
 cfg = load_config()
 
 
-def make_app(config_files=None, debug=False):
+def make_app(handlers, settings):
     """Create and return a `tornado.web.Application` object with specified
     handlers and settings.
 
@@ -48,27 +37,30 @@ def make_app(config_files=None, debug=False):
         changed source files are immediately reloaded.
 
     """
+    # TODO: handle config files by parsing sys.argv
+    #       handle debug flag
+
     # baselayer settings
-    cfg = load_config(config_files)
+#    cfg = load_config(config_files)
 
-    if cfg['cookie_secret'] == 'abc01234':
-        print('!' * 80)
-        print('  Your server is insecure. Please update the secret string ')
-        print('  in the configuration file!')
-        print('!' * 80)
+    ## if cfg['cookie_secret'] == 'abc01234':
+    ##     print('!' * 80)
+    ##     print('  Your server is insecure. Please update the secret string ')
+    ##     print('  in the configuration file!')
+    ##     print('!' * 80)
 
-    for path_name, path in cfg['paths'].items():
-        if not os.path.exists(path):
-            print("Creating %s" % path)
-            try:
-                os.makedirs(path)
-            except Exception as e:
-                print(e)
+    ## for path_name, path in cfg['paths'].items():
+    ##     if not os.path.exists(path):
+    ##         print("Creating %s" % path)
+    ##         try:
+    ##             os.makedirs(path)
+    ##         except Exception as e:
+    ##             print(e)
 
     app = tornado.web.Application(handlers, **settings)
-    models.db.init(**cfg['database'])
-    model_util.create_tables()
-    model_util.create_tables(models.app_models)
-    app.cfg = cfg
+#    models.db.init(**cfg['database'])
+#    model_util.create_tables()
+#    model_util.create_tables(models.app_models)
+#    app.cfg = cfg
 
     return app

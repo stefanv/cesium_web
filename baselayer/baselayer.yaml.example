@@ -6,12 +6,8 @@ app:
                           # using:
                           #
                           # base64.b64encode(os.urandom(50)).decode('ascii')
-
-paths:
-    # Note below that defined variables can be reused in subsequent
-    # definitions.
-
-    data_path: './data'
+    factory: baselayer.example_app.make_app
+    port: 65000
 
 database:
     database: app_name
@@ -36,6 +32,3 @@ server:
         debug_login: False
         google_oauth2_key:
         google_oauth2_secret:
-
-app_factory:
-    baselayer.example_app.app.app_server

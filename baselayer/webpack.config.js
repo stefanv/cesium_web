@@ -2,11 +2,16 @@ const webpack = require('webpack');
 const path = require('path');
 
 const config = {
-  entry: path.resolve(__dirname, 'static/scripts/main.jsx'),
+  entry: {
+      // Add one entry per main HTML page
+      exampleMainPage: './example_app/static/js/main.jsx'
+  }
+
   output: {
-    path: path.resolve(__dirname, 'static/build'),
+    path: path.resolve(__dirname, 'example_app/static/build'),
     filename: 'bundle.js'
   },
+
   module: {
     rules: [
       { test: /\.js?$/,
@@ -35,24 +40,26 @@ const config = {
       }
     ],
   },
+
   plugins: [
     new webpack.ProvidePlugin({
       fetch: 'imports-loader?this=>global!exports-loader?global.fetch!whatwg-fetch'
     }),
 
-    // We do not use JQuery for anything in this project; but Bootstrap
-    // depends on it
-    new webpack.ProvidePlugin({
-      $: "jquery",
-      jQuery: "jquery",
+    new webpack.optimize.CommonsChunkPlugin({
+      // See: https://webpack.js.org/plugins/commons-chunk-plugin/
+      name: "commons",
+      filename: "commons.js",
     })
   ],
+
   resolve: {
     alias: {
       baselayer: path.resolve(__dirname, 'baselayer/static/js')
     },
     extensions: ['.js', '.jsx']
   }
+
 };
 
 module.exports = config;

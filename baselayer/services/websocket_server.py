@@ -7,8 +7,8 @@ import jwt
 
 import collections
 
-from baselayer.app.util import load_config
-secret = load_config()['app:secret-key']
+from baselayer.app import cfg
+secret = cfg['app:secret-key']
 
 if secret is None:
     raise RuntimeError('We need a secret key to communicate with the server!')

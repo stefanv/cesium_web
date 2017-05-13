@@ -1,5 +1,6 @@
 import yaml
 import os
+import pathlib
 
 
 class Config(dict):
@@ -14,7 +15,7 @@ class Config(dict):
         if os.path.isfile(filename):
             more_cfg = yaml.load(open(filename))
             dict.update(self, more_cfg)
-            print('[cesium] Loaded {}'.format(os.path.relpath(filename)))
+            print('[baselayer] Loaded {}'.format(os.path.relpath(filename)))
 
     def __getitem__(self, key):
         keys = key.split(':')
@@ -42,6 +43,17 @@ class Config(dict):
                     print('  ', key.ljust(30), val)
 
         print("=" * 78)
+
+
+def load_baselayer_config(config_files=None):
+    if config_files is None:
+        basedir = pathlib.Path(os.path.dirname(__file__))/'..'
+        config_files = (basedir/'baselayer.yaml.example', basedir/'baselayer.yaml')
+        config_files = (c.absolute() for c in config_files)
+
+    cfg = Config(config_files)
+
+    return cfg
 
 
 if __name__ == "__main__":

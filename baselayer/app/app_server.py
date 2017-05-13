@@ -18,25 +18,14 @@ from .handlers import (
     LogoutHandler
 )
 
-
-def load_config(config_files=None):
-    if config_files is None:
-        basedir = pathlib.Path(os.path.dirname(__file__))/'..'
-        config_files = (basedir/'baselayer.yaml.example', basedir/'baselayer.yaml')
-        config_files = (c.absolute() for c in config_files)
-
-    cfg = Config(config_files)
-
-    return cfg
-
-
-cfg = load_config()
+from .config import load_baselayer_config
+cfg = load_baselayer_config()
 
 
 # Tornado settings
 settings = {
     'template_path': './static',
-    'autoreload': debug,
+#    'autoreload': debug,
     'cookie_secret': cfg['app:secret-key'],
     'login_url': '/',
 
