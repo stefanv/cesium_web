@@ -4,55 +4,55 @@ Python Social Auth: storage and user model definitions
 https://github.com/python-social-auth
 """
 
-from social_peewee.storage import (
-    database_proxy, BasePeeweeStorage,
-    PeeweeAssociationMixin, PeeweeCodeMixin,
-    PeeweeNonceMixin, PeeweePartialMixin, PeeweeUserMixin
+from social_sqlalchemy.storage import (
+     BaseStorage,
+    AssociationMixin, CodeMixin,
+    NonceMixin, PartialMixin, UserMixin
 )
 
 from social_core.backends.google import GoogleOAuth2
 
-import peewee as pw
-from .models import BaseModel, User, db
+from sqlalchemy.orm import relationship
+from .models import Base, User#, db
 
 
-database_proxy.initialize(db)
+#database_proxy.initialize(db)  # TODO initialize
 
 
-class UserSocialAuth(BaseModel, PeeweeUserMixin):
+class UserSocialAuth(Base, UserMixin):
     """
     This model is used by PSA to store whatever it needs during
     authentication, e.g. token expiration time, etc.
     """
-    user = pw.ForeignKeyField(User, related_name='social_auth')
+    user = relationship('User', back_populates='social_auth')
 
     @classmethod
     def user_model(cls):
         return User
 
 
-class TornadoPeeweeStorage(BasePeeweeStorage):
+class TornadoStorage(BaseStorage):
     """
-    Storage definition for Peewee + Tornado.
+    Storage definition for Tornado.
 
-    We use PSA's default Peewee implementation.
+    We use PSA's default implementation.
 
     http://python-social-auth.readthedocs.io/en/latest/storage.html#storage-interface
     """
 
-    class nonce(PeeweeNonceMixin):
+    class nonce(NonceMixin):
         """Single use numbers"""
         pass
 
-    class association(PeeweeAssociationMixin):
+    class association(AssociationMixin):
         """OpenId account association"""
         pass
 
-    class code(PeeweeCodeMixin):
+    class code(CodeMixin):
         """Mail validation single one time use code"""
         pass
 
-    class partial(PeeweePartialMixin):
+    class partial(PartialMixin):
         pass
 
     user = UserSocialAuth

@@ -2,8 +2,9 @@ from datetime import datetime
 import simplejson as json
 import numpy as np
 import pandas as pd
-import peewee
 import six
+from sqlalchemy.orm.base import object_mapper
+from sqlalchemy.orm.exc import UnmappedInstanceError
 
 
 data_types = {
@@ -25,11 +26,9 @@ class Encoder(json.JSONEncoder):
         elif isinstance(o, bytes):
             return o.decode('utf-8')
 
-        elif isinstance(o, peewee.Model):
-            return o.__dict__()
-
-        elif isinstance(o, peewee.SelectQuery):
-            return [self.default(item) for item in list(o)]
+        elif hasattr(o, '__table__'):  # SQLAlchemy model
+            return {c.name: str(getattr(o, c.name))
+                    for c in o.__table__.columns}
 
         elif o is int:
             return 'int'

@@ -1,6 +1,6 @@
-import tornado.web
 import tornado.escape
 import tornado.ioloop
+from sqlalchemy.orm.exc import NoResultFound
 
 # The Python Social Auth base handler gives us:
 #   user_id, get_current_user, login_user
@@ -10,7 +10,7 @@ import tornado.ioloop
 # be used to look up the logged in user.
 from social_tornado.handlers import BaseHandler as PSABaseHandler
 
-from .. import models
+from ..models import User
 from ..json_util import to_json
 from ..flow import Flow
 
@@ -40,29 +40,33 @@ class BaseHandler(PSABaseHandler):
         if not self._baselayer_cfg['server:multi_user']:
             username = 'testuser@gmail.com'
             try:
-                models.User.get(username=username)
-            except models.User.DoesNotExist:
-                models.User.create(username=username, email=username)
-            return username
+                u = User.query.filter(User.username == username).one()
+            except NoResultFound:
+                u = User(username=username, email=username)
+                DBSession.add(u)
+                DBSession().commit()
 
         user_id = self.get_secure_cookie('user_id')
         if user_id is None:
-            return None
+            u = None
         else:
             try:
-                return models.User.get(id=int(user_id)).username
-            except models.User.DoesNotExist:
-                return None
+                u = User.query.get(int(user_id))
+            except NoResultFound:
+                u = None
+
+        return u
 
     def push(self, action, payload={}):
-        self.flow.push(self.current_user, action, payload)
+        self.flow.push(self.current_user.username, action, payload)
 
     def get_json(self):
         return tornado.escape.json_decode(self.request.body)
 
     def on_finish(self):
-        if not models.db.is_closed():
-            models.db.close()
+        # TODO decide when to connect
+#        if not models.db.is_closed():
+#            models.db.close()
 
         return super(BaseHandler, self).on_finish()
 
@@ -110,12 +114,3 @@ class BaseHandler(PSABaseHandler):
         yield executor._start()
 
         return executor
-
-
-class AccessError(tornado.web.HTTPError):
-    def __init__(self, reason, status_code=400):
-        tornado.web.HTTPError.__init__(self, reason=reason,
-                                       status_code=400)
-
-    def __str__(self):
-        return self.reason

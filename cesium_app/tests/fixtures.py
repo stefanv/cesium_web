@@ -4,13 +4,13 @@ import uuid
 import os
 from os.path import join as pjoin
 from contextlib import contextmanager
-from cesium_app import models
+from cesium_app.models import (DBSession, User, Project, File, Dataset,
+                               Featureset, Model, Prediction)
 from cesium import data_management, featurize
 from cesium.features import CADENCE_FEATS, GENERAL_FEATS, LOMB_SCARGLE_FEATS
 from cesium.tests import fixtures
 from cesium_app.ext.sklearn_models import MODELS_TYPE_DICT
 import shutil
-import peewee
 import datetime
 import joblib
 import pandas as pd
@@ -21,12 +21,16 @@ from .conftest import cfg
 @contextmanager
 def create_test_project():
     """Create and yield test project, then delete."""
-    p = models.Project.add_by('test_proj', 'test_desc', 'testuser@gmail.com')
-    p.save()
+    p = Project(name='test_proj', description='test_desc',
+                       users=[User.query.filter(User.username ==
+                                                'testuser@gmail.com').one()])
+    DBSession().add(p)
+    DBSession().commit()
     try:
         yield p
     finally:
-        p.delete_instance()
+        DBSession().delete(p)
+        DBSession().commit()
 
 
 @contextmanager
@@ -57,12 +61,15 @@ def create_test_dataset(project, label_type='class'):
     tarball = shutil.copy2(tarball, cfg['paths:upload_folder'])
     ts_paths = data_management.parse_and_store_ts_data(
         tarball, cfg['paths:ts_data_folder'], header)
-    d = models.Dataset.add(name='test_ds', project=project, file_uris=ts_paths)
-    d.save()
+    d = Dataset(name='test_ds', project=project,
+                files=[File(uri=uri) for uri in ts_paths])
+    DBSession().add(d)
+    DBSession().commit()
     try:
         yield d
     finally:
-        d.delete_instance()
+        DBSession().delete(d)
+        DBSession().commit()
 
 
 @contextmanager
@@ -91,17 +98,17 @@ def create_test_featureset(project, label_type='class'):
     fset_path = pjoin(cfg['paths:features_folder'],
                       '{}.npz'.format(str(uuid.uuid4())))
     featurize.save_featureset(fset_data, fset_path, labels=fset_labels)
-    f, created = models.File.get_or_create(uri=fset_path)
-    fset = models.Featureset.create(name='test_featureset', file=f,
-                                    project=project,
-                                    features_list=features_to_use,
-                                    custom_features_script=None,
-                                    finished=datetime.datetime.now())
-    fset.save()
+    fset = Featureset.create(name='test_featureset', file=File(uri=fset_path),
+                             project=project, features_list=features_to_use,
+                             custom_features_script=None,
+                             finished=datetime.datetime.now())
+    DBSession().add(fset)
+    DBSession().commit()
     try:
         yield fset
     finally:
-        fset.delete_instance()
+        DBSession().delete(fest)
+        DBSession().commit()
 
 
 @contextmanager
@@ -136,16 +143,17 @@ def create_test_model(fset, model_type='RandomForestClassifier'):
     model_path = pjoin(cfg['paths:models_folder'],
                        '{}.pkl'.format(str(uuid.uuid4())))
     joblib.dump(model, model_path)
-    f, created = models.File.get_or_create(uri=model_path)
-    model = models.Model.create(name='test_model',
-                                file=f, featureset=fset, project=fset.project,
-                                params=model_params[model_type], type=model_type,
-                                finished=datetime.datetime.now())
-    model.save()
+    model = Model(name='test_model', file=File(uri=model_path),
+                  featureset=fset, project=fset.project,
+                  params=model_params[model_type], type=model_type,
+                  finished=datetime.datetime.now())
+    DBSession().add(model)
+    DBSession().commit()
     try:
         yield model
     finally:
-        model.delete_instance()
+        DBSession().delete(model)
+        DBSession().commit()
 
 
 @contextmanager
@@ -179,12 +187,13 @@ def create_test_prediction(dataset, model, featureset=None):
                       '{}.npz'.format(str(uuid.uuid4())))
     featurize.save_featureset(fset, pred_path, labels=data['labels'],
                               preds=preds, pred_probs=pred_probs)
-    f, created = models.File.get_or_create(uri=pred_path)
-    pred = models.Prediction.create(file=f, dataset=dataset,
-                                    project=dataset.project,
-                                    model=model, finished=datetime.datetime.now())
-    pred.save()
+    pred = Prediction(file=File(uri=pred_path), dataset=dataset,
+                      project=dataset.project, model=model,
+                      finished=datetime.datetime.now())
+    DBSession().add(pred)
+    DBSession().commit()
     try:
         yield pred
     finally:
-        pred.delete_instance()
+        DBSession().delete(pred)
+        DBSession().commit()

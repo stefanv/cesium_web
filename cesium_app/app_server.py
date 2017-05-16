@@ -6,7 +6,7 @@ import pathlib
 
 from baselayer.app.config import Config
 from . import models
-from baselayer.app import model_util
+from .  import model_util
 from baselayer.app.app_server import (handlers as baselayer_handlers,
                                       settings as baselayer_settings)
 from baselayer.app.config import load_config
@@ -73,10 +73,14 @@ def make_app(config_files=None, debug=False):
     ]
 
     settings = baselayer_settings
-    settings.update({'autoreload': debug})  # Specify additional settings here
+    settings.update({
+        'autoreload': debug,
+        'SOCIAL_AUTH_USER_MODEL': 'cesium_app.models.User',
+        'SOCIAL_AUTH_STORAGE': 'cesium_app.psa.TornadoStorage',
+    })  # Specify additional settings here
 
     app = tornado.web.Application(handlers, **settings)
-    models.db.init(**cfg['database'])
+#    models.db.init(**cfg['database'])  # TODO where to connect?
     model_util.create_tables()
     model_util.create_tables(models.app_models)
     app.cfg = cfg

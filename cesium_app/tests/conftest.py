@@ -81,13 +81,13 @@ def driver(request):
 @pytest.fixture(scope='session', autouse=True)
 def remove_test_files(request):
     def teardown():
-        for f in models.File.select():
+        for f in models.File.query:
             try:
                 os.remove(f.file.uri)
             except:
                 pass
     try:
-        models.db.connect()
+#        models.db.connect()  # TODO when to connect?
         request.addfinalizer(teardown)
     except:  # skip teardown if DB not available
         pass
