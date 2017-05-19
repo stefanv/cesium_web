@@ -13,7 +13,7 @@ dependencies:
 	@./baselayer/tools/silent_monitor.py ./baselayer/tools/check_js_deps.sh
 
 db_init:
-	@./baselayer/tools/silent_monitor.py ./tools/db_init.sh
+	@./baselayer/tools/silent_monitor.py ./baselayer/tools/db_init.py
 
 db_clear:
 	PYTHONPATH=. ./baselayer/tools/db_clear.py
