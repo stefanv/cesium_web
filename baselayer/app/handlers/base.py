@@ -51,7 +51,7 @@ class BaseHandler(PSABaseHandler):
                 u = None
             else:
                 try:
-                    u = User.query.get(user_id)
+                    u = User.query.get(int(user_id))
                 except NoResultFound:
                     u = None
 
