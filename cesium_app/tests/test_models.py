@@ -2,10 +2,8 @@ import os
 import tempfile
 
 from cesium_app import models as m
-from cesium_app.tests.fixtures import project, dataset
 
 
-# TODO
 def test_dataset_delete(project, dataset):
     """Test that deleting a `Dataset` also removes any associated files."""
     uris = [f.uri for f in dataset.files]
@@ -13,3 +11,12 @@ def test_dataset_delete(project, dataset):
     m.DBSession().delete(dataset)
     m.DBSession().commit()
     assert not any(os.path.exists(f) for f in uris)
+
+
+def test_file_delete(featureset, model):#, prediction):
+    """Test that deleting an object also removes any associated files."""
+    for obj in [model, featureset]:#, prediction]:
+        assert os.path.exists(obj.file_uri)
+        m.DBSession().delete(obj)
+        m.DBSession().commit()
+        assert not os.path.exists(obj.file_uri)

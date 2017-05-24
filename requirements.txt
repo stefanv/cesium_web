@@ -8,6 +8,7 @@ simplejson
 distributed==1.14.3
 selenium
 joblib>=0.11
+sqlalchemy
 social-auth-core
 social-auth-app-tornado
 social-auth-storage-sqlalchemy

@@ -11,9 +11,9 @@ from selenium.common.exceptions import NoSuchElementException
 from seleniumrequests.request import RequestMixin
 from pytest_factoryboy import register
 from cesium_app import models
-from cesium_app.model_util import clear_tables
 from cesium_app.tests.fixtures import (ProjectFactory, DatasetFactory,
-                                       FeaturesetFactory, ModelFactory)
+                                       FeaturesetFactory, ModelFactory,
+                                       PredictionFactory)
 
 print('Loading test configuration from _test_config.yaml')
 basedir = pathlib.Path(os.path.dirname(__file__))
@@ -77,6 +77,7 @@ def driver(request):
 @pytest.fixture(scope='function', autouse=True)
 def reset_state(request):
     def teardown():
+        # TODO delete or no? leaning towards no
 #        models.User.query.delete()
 #        models.Project.query.delete()
 #        models.DBSession().commit()
@@ -86,5 +87,18 @@ def reset_state(request):
 
 register(ProjectFactory)
 register(DatasetFactory)
+register(DatasetFactory, "unlabeled_dataset")
 register(FeaturesetFactory)
 register(ModelFactory)
+register(PredictionFactory)
+register(PredictionFactory, "unlabeled_prediction")
+
+
+@pytest.fixture
+def unlabeled_dataset__name():
+    return "unlabeled"
+
+
+@pytest.fixture
+def unlabeled_prediction__dataset(unlabeled_dataset):
+    return unlabeled_dataset

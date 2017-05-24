@@ -5,7 +5,7 @@ import os
 from os.path import join as pjoin
 from cesium_app.models import (DBSession, User, Project, DatasetFile, Dataset,
                                Featureset, Model, Prediction)
-from cesium import data_management, featurize
+from cesium import data_management, featurize, time_series
 from cesium.tests.fixtures import sample_featureset
 from cesium.features import CADENCE_FEATS, GENERAL_FEATS, LOMB_SCARGLE_FEATS
 from cesium_app.ext.sklearn_models import MODELS_TYPE_DICT
@@ -46,18 +46,18 @@ class DatasetFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = DBSession()
         sqlalchemy_session_persistence = 'commit'
         model = Dataset
-    name = 'test_ds'
+    name = 'class'
     project = factory.SubFactory(ProjectFactory)
 
     @factory.post_generation
-    def add_files(dataset, create, label_type='class', *args, **kwargs):
+    def add_files(dataset, create, value, *args, **kwargs):
         if not create:
             return
 
-        if label_type == 'class':
+        if 'class' in dataset.name:
             header = pjoin(os.path.dirname(__file__),
                            'data', 'asas_training_subset_classes.dat')
-        elif label_type == 'regr':
+        elif 'regr' in dataset.name:
             header = pjoin(os.path.dirname(__file__),
                            'data', 'asas_training_subset_targets.dat')
         else:
@@ -136,49 +136,39 @@ class ModelFactory(factory.alchemy.SQLAlchemyModelFactory):
         model_data = MODELS_TYPE_DICT[model.type](**model_params[model.type])
         model_data.fit(fset_data, data['labels'])
         model.file_uri = pjoin('/tmp/', '{}.pkl'.format(str(uuid.uuid4())))
-        joblib.dump(model, model.file_uri)
+        joblib.dump(model_data, model.file_uri)
         DBSession().commit()
 
 
-'''
-@pytest.fixture(scope='function')
-def prediction(dataset, model, featureset):
-    """Create and yield test prediction, then delete.
+class PredictionFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        sqlalchemy_session = DBSession()
+        sqlalchemy_session_persistence = 'commit'
+        model = Prediction
+    project = factory.SubFactory(ProjectFactory)
+    dataset = factory.SubFactory(DatasetFactory)
+    model = factory.SubFactory(ModelFactory)
+    finished = datetime.datetime.now()
 
-    Params
-    ------
-    dataset : `models.Dataset` instance
-        Dummy dataset used to create prediction instance.
-    model : `models.Model` instance
-        The model to use to create prediction.
-    featureset : `models.Featureset` instance, optional
-        The featureset on which prediction will be performed. If None,
-        the featureset associated with `model` will be used. Defaults
-        to None.
-    """
-    fset, data = featurize.load_featureset(featureset.file_uri)
-    model_data = joblib.load(model.file_uri)
-    if hasattr(model_data, 'best_estimator_'):
-        model_data = model_data.best_estimator_
-    preds = model_data.predict(fset)
-    pred_probs = (pd.DataFrame(model_data.predict_proba(fset),
-                               index=fset.index, columns=model_data.classes_)
-                  if hasattr(model_data, 'predict_proba') else [])
-    all_classes = model_data.classes_ if hasattr(model_data, 'classes_') else []
-    pred_path = pjoin(cfg['paths:predictions_folder'],
-                      '{}.npz'.format(str(uuid.uuid4())))
-    featurize.save_featureset(fset, pred_path, labels=data['labels'],
-                              preds=preds, pred_probs=pred_probs)
-    pred = Prediction(file_uri=pred_path, dataset=dataset,
-                      project=dataset.project, model=model,
-                      finished=datetime.datetime.now())
-    DBSession().add(pred)
-    DBSession().commit()
-
-    try:
-        yield pred
-        DBSession().delete(pred)
+    @factory.post_generation
+    def add_file(prediction, create, value, *args, **kwargs):
+        train_featureset = prediction.model.featureset
+        fset_data, data = featurize.load_featureset(train_featureset.file_uri)
+        if 'class' in prediction.dataset.name or 'regr' in prediction.dataset.name:
+            labels = data['labels']
+        else:
+            labels = []
+        model_data = joblib.load(prediction.model.file_uri)
+        if hasattr(model_data, 'best_estimator_'):
+            model_data = model_data.best_estimator_
+        preds = model_data.predict(fset_data)
+        pred_probs = (pd.DataFrame(model_data.predict_proba(fset_data),
+                                   index=fset_data.index.astype(str),
+                                   columns=model_data.classes_)
+                      if hasattr(model_data, 'predict_proba') else [])
+        all_classes = model_data.classes_ if hasattr(model_data, 'classes_') else []
+        pred_path = pjoin('/tmp', '{}.npz'.format(str(uuid.uuid4())))
+        featurize.save_featureset(fset_data, pred_path, labels=labels,
+                                  preds=preds, pred_probs=pred_probs)
+        prediction.file_uri = pred_path
         DBSession().commit()
-    except (ObjectDeletedError, StaleDataError): 
-        DBSession().rollback()
-'''

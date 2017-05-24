@@ -92,7 +92,7 @@ def test_hyper_param_populate(driver, project, featureset, model):
     driver.find_element_by_xpath("//label[contains(text(),'alpha_1')]")
 
 
-@pytest.mark.parametrize('featureset__name', [None], indirect=True)
+@pytest.mark.parametrize('featureset__name', ['unlabeled'])
 def test_cannot_build_model_unlabeled_data(driver, project, featureset):
     driver.get('/')
     driver.refresh()

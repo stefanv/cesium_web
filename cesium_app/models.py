@@ -54,9 +54,9 @@ class BaseMixin(object):
         else:
             raise NotImplementedError(f"{type(self)} object has no owner")
 
-    def to_dict(self):  # TODO iterate over columns instead?
-        return {k: v for k, v in self.__dict__.items()
-                if not k.startswith('_')}
+    def to_dict(self):
+        return {c.name: getattr(self, c.name)
+                for c in type(self).__table__.columns}
 
     @classmethod
     def get_if_owned_by(cls, ident, user):
@@ -105,13 +105,6 @@ class DatasetFile(Base):
                      context.current_parameters.get('uri'))
 
 
-# TODO is there a better way to "cascade" this?
-@sa.event.listens_for(Dataset, 'before_delete')
-def remove_dataset_files(mapper, connection, target):
-    for f in target.files:
-        DBSession.delete(f)
-
-
 class Project(Base):
     name = sa.Column(sa.String(), nullable=False)
     description = sa.Column(sa.String())
@@ -124,25 +117,6 @@ class Project(Base):
     models = relationship('Model', back_populates='project', cascade='all')
     predictions = relationship('Prediction', back_populates='project',
                                cascade='all')
-
-
-#class File(Base):
-#    id = None  # no ID field
-#    uri = sa.Column(sa.String(), primary_key=True)
-#    name = sa.Column(sa.String(), default=lambda context:
-#                     context.current_parameters.get('uri'))
-#    created = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
-#    datasets = relationship('Dataset', secondary=dataset_files, viewonly=True,
-#                            back_populates='files')
-
-
-# TODO restore this
-#@sa.event.listens_for(File, 'after_delete')
-#def remove_file(mapper, connection, target):
-#    try:
-#        os.remove(target.uri)
-#    except FileNotFoundError:
-#        pass
 
 
 class Featureset(Base):
@@ -177,6 +151,13 @@ class Model(Base):
     featureset = relationship('Featureset')
     project = relationship('Project')
 
+@sa.event.listens_for(Featureset, 'after_delete')
+def remove_featureset_file(mapper, connection, target):
+    try:
+        os.remove(target.file_uri)
+    except FileNotFoundError:
+        pass
+
 
 class Prediction(Base):
     project_id = sa.Column(sa.ForeignKey('projects.id', ondelete='CASCADE'),
@@ -196,7 +177,7 @@ class Prediction(Base):
 
     def format_pred_data(fset, data):
         fset.columns = fset.columns.droplevel('channel')
-        fset.index = fset.index.astype(str)  # can't use ints as sa.JSON keys
+#        fset.index = fset.index.astype(str)  # can't use ints as JSON keys
 
         labels = pd.Series(data['labels'] if len(data.get('labels', [])) > 0
                            else None, index=fset.index)
@@ -222,6 +203,24 @@ class Prediction(Base):
             info['isProbabilistic'] = (len(data['pred_probs']) > 0)
             info['results'] = Prediction.format_pred_data(fset, data)
         return info
+
+
+@sa.event.listens_for(DatasetFile, 'after_delete')
+def remove_dataset_file(mapper, connection, target):
+    try:
+        os.remove(target.uri)
+    except FileNotFoundError:
+        pass
+
+
+def remove_file(mapper, connection, target):
+    try:
+        os.remove(target.file_uri)
+    except FileNotFoundError:
+        pass
+sa.event.listens_for(Featureset, 'after_delete')(remove_file)
+sa.event.listens_for(Model, 'after_delete')(remove_file)
+sa.event.listens_for(Prediction, 'after_delete')(remove_file)
 
 
 class User(Base):

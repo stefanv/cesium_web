@@ -10,8 +10,6 @@ import numpy.testing as npt
 import pandas as pd
 from ..conftest import cfg
 import json
-from cesium_app.tests.fixtures import (project, dataset, featureset, model,
-                                       prediction)
 
 
 def _add_prediction(proj_id, driver):
@@ -54,9 +52,10 @@ def _grab_pred_results_table_rows(driver, text_to_look_for):
     return rows
 
 
-@pytest.mark.parametrize('featureset, model', [('class', 'RandomForestClassifier'),
-                                               ('class', 'LinearSGDClassifier'),
-                                               ('regr', 'RandomForestRegressor')], indirect=True)
+@pytest.mark.parametrize('featureset__name, model__type',
+                         [('class', 'RandomForestClassifier'),
+                          ('class', 'LinearSGDClassifier'),
+                          ('regr', 'RandomForestRegressor')])
 def test_add_prediction(driver, project, dataset, featureset, model):
     driver.get('/')
     _add_prediction(project.id, driver)
@@ -78,7 +77,7 @@ def test_pred_results_table_rfc(driver, project, dataset, featureset, model,
         raise
 
 
-@pytest.mark.parametrize('model', ['LinearSGDClassifier'], indirect=True)
+@pytest.mark.parametrize('model__type', ['LinearSGDClassifier'])
 def test_pred_results_table_lsgdc(driver, project, dataset, featureset, model,
                                  prediction):
     driver.get('/')
@@ -96,7 +95,7 @@ def test_pred_results_table_lsgdc(driver, project, dataset, featureset, model,
         raise
 
 
-@pytest.mark.parametrize('featureset, model', [('regr', 'LinearRegressor')], indirect=True)
+@pytest.mark.parametrize('featureset__name, model__type', [('regr', 'LinearRegressor')])
 def test_pred_results_table_regr(driver, project, dataset, featureset, model,
                                  prediction):
     driver.get('/')
@@ -114,7 +113,7 @@ def test_pred_results_table_regr(driver, project, dataset, featureset, model,
         raise
 
 
-@pytest.mark.parametrize('featureset', [None], indirect=True)
+@pytest.mark.parametrize('dataset__name', ['unlabeled'])
 def test_pred_results_table_unlabeled(driver, project, dataset, featureset, model):
     driver.get('/')
     _add_prediction(project.id, driver)
@@ -157,115 +156,100 @@ def _click_download(proj_id, driver):
     time.sleep(0.5)
 
 
-def test_download_prediction_csv_class(driver, project, dataset, featureset, model):
+@pytest.mark.parametrize('model__type', ['LinearSGDClassifier'])
+def test_download_prediction_csv_class(driver, project, dataset, featureset,
+                                       model, prediction):
     driver.get('/')
-    with create_test_project() as project, create_test_dataset(project) as dataset,\
-         create_test_featureset(project) as featureset,\
-         create_test_model(featureset, model_type='LinearSGDClassifier') as model,\
-         create_test_prediction(dataset, model):
-        _click_download(project.id, driver)
-        assert os.path.exists('/tmp/cesium_prediction_results.csv')
-        try:
-            npt.assert_equal(
-                np.genfromtxt('/tmp/cesium_prediction_results.csv', dtype='str'),
-                ['ts_name,label,prediction',
-                 '0,Mira,Mira',
-                 '1,Classical_Cepheid,Classical_Cepheid',
-                 '2,Mira,Mira',
-                 '3,Classical_Cepheid,Classical_Cepheid',
-                 '4,Mira,Mira'])
-        finally:
-            os.remove('/tmp/cesium_prediction_results.csv')
+    _click_download(project.id, driver)
+    assert os.path.exists('/tmp/cesium_prediction_results.csv')
+    try:
+        npt.assert_equal(
+            np.genfromtxt('/tmp/cesium_prediction_results.csv', dtype='str'),
+            ['ts_name,label,prediction',
+             '0,Mira,Mira',
+             '1,Classical_Cepheid,Classical_Cepheid',
+             '2,Mira,Mira',
+             '3,Classical_Cepheid,Classical_Cepheid',
+             '4,Mira,Mira'])
+    finally:
+        os.remove('/tmp/cesium_prediction_results.csv')
 
 
-def test_download_prediction_csv_class_unlabeled(driver, project, dataset, featureset, model):
+@pytest.mark.parametrize('model__type', ['LinearSGDClassifier'])
+def test_download_prediction_csv_class_unlabeled(driver, project, unlabeled_prediction):
     driver.get('/')
-    with create_test_project() as project, create_test_dataset(project, label_type=None) as dataset,\
-         create_test_featureset(project) as featureset,\
-         create_test_featureset(project, label_type=None) as unlabeled_fs,\
-         create_test_model(featureset, model_type='LinearSGDClassifier') as model,\
-         create_test_prediction(dataset, model, featureset=unlabeled_fs):
-        _click_download(project.id, driver)
-        assert os.path.exists('/tmp/cesium_prediction_results.csv')
-        try:
-            result = np.genfromtxt('/tmp/cesium_prediction_results.csv', dtype='str')
-            assert result[0] == 'ts_name,prediction'
-            assert all([el[0].isdigit() and el[1] == ',' and el[2:] in
-                        ['Mira', 'Classical_Cepheid'] for el in result[1:]])
-        finally:
-            os.remove('/tmp/cesium_prediction_results.csv')
+    _click_download(project.id, driver)
+    assert os.path.exists('/tmp/cesium_prediction_results.csv')
+    try:
+        result = np.genfromtxt('/tmp/cesium_prediction_results.csv', dtype='str')
+        assert result[0] == 'ts_name,prediction'
+        assert all([el[0].isdigit() and el[1] == ',' and el[2:] in
+                    ['Mira', 'Classical_Cepheid'] for el in result[1:]])
+    finally:
+        os.remove('/tmp/cesium_prediction_results.csv')
 
 
-def test_download_prediction_csv_class_prob(driver, project, dataset, featureset, model):
+def test_download_prediction_csv_class_prob(driver, project, dataset,
+                                            featureset, model, prediction):
     driver.get('/')
-    with create_test_project() as project, create_test_dataset(project) as dataset,\
-         create_test_featureset(project) as featureset,\
-         create_test_model(featureset, model_type='RandomForestClassifier') as model,\
-         create_test_prediction(dataset, model):
-        _click_download(project.id, driver)
-        assert os.path.exists('/tmp/cesium_prediction_results.csv')
-        try:
-            result = pd.read_csv('/tmp/cesium_prediction_results.csv')
-            npt.assert_array_equal(result.ts_name, np.arange(5))
-            npt.assert_array_equal(result.label, ['Mira', 'Classical_Cepheid',
-                                                  'Mira', 'Classical_Cepheid',
-                                                  'Mira'])
-            pred_probs = result[['Classical_Cepheid', 'Mira']]
-            npt.assert_array_equal(np.argmax(pred_probs.values, axis=1),
-                                   [1, 0, 1, 0, 1])
-            assert (pred_probs.values >= 0.0).all()
-        finally:
-            os.remove('/tmp/cesium_prediction_results.csv')
+    _click_download(project.id, driver)
+    assert os.path.exists('/tmp/cesium_prediction_results.csv')
+    try:
+        result = pd.read_csv('/tmp/cesium_prediction_results.csv')
+        npt.assert_array_equal(result.ts_name, np.arange(5))
+        npt.assert_array_equal(result.label, ['Mira', 'Classical_Cepheid',
+                                              'Mira', 'Classical_Cepheid',
+                                              'Mira'])
+        pred_probs = result[['Classical_Cepheid', 'Mira']]
+        npt.assert_array_equal(np.argmax(pred_probs.values, axis=1),
+                               [1, 0, 1, 0, 1])
+        assert (pred_probs.values >= 0.0).all()
+    finally:
+        os.remove('/tmp/cesium_prediction_results.csv')
 
 
-def test_download_prediction_csv_regr(driver, project, dataset, featureset, model):
+# TODO dataset?
+@pytest.mark.parametrize('featureset__name, model__type', [('regr', 'LinearRegressor')])
+def test_download_prediction_csv_regr(driver, project, dataset, featureset, model, prediction):
     driver.get('/')
-    with create_test_project() as project, create_test_dataset(project, label_type='regr') as dataset,\
-         create_test_featureset(project, label_type='regr') as featureset,\
-         create_test_model(featureset, model_type='LinearRegressor') as model,\
-         create_test_prediction(dataset, model):
-        _click_download(project.id, driver)
-        assert os.path.exists('/tmp/cesium_prediction_results.csv')
-        try:
-            results = np.genfromtxt('/tmp/cesium_prediction_results.csv',
-                                    dtype='str', delimiter=',')
-            npt.assert_equal(results[0],
-                             ['ts_name', 'label', 'prediction'])
-            npt.assert_array_almost_equal(
-                [[float(e) for e in row] for row in results[1:]],
-                [[0, 2.2, 2.2],
-                 [1, 3.4, 3.4],
-                 [2, 4.4, 4.4],
-                 [3, 2.2, 2.2],
-                 [4, 3.1, 3.1]])
-        finally:
-            os.remove('/tmp/cesium_prediction_results.csv')
+    _click_download(project.id, driver)
+    assert os.path.exists('/tmp/cesium_prediction_results.csv')
+    try:
+        results = np.genfromtxt('/tmp/cesium_prediction_results.csv',
+                                dtype='str', delimiter=',')
+        npt.assert_equal(results[0],
+                         ['ts_name', 'label', 'prediction'])
+        npt.assert_array_almost_equal(
+            [[float(e) for e in row] for row in results[1:]],
+            [[0, 2.2, 2.2],
+             [1, 3.4, 3.4],
+             [2, 4.4, 4.4],
+             [3, 2.2, 2.2],
+             [4, 3.1, 3.1]])
+    finally:
+        os.remove('/tmp/cesium_prediction_results.csv')
 
 
 def test_predict_specific_ts_name(driver, project, dataset, featureset, model):
-    with create_test_project() as project, create_test_dataset(project) as dataset,\
-         create_test_featureset(project) as featureset, create_test_model(featureset) as model:
-        ts_data = [[1, 2, 3, 4], [32.2, 53.3, 32.3, 32.52], [0.2, 0.3, 0.6, 0.3]]
-        impute_kwargs = {'strategy': 'constant', 'value': None}
-        data = {'datasetID': dataset.id,
-                'ts_names': ['217801'],
-                'modelID': model.id}
-        response = driver.request(
-            'POST', '{}/predictions'.format(cfg['server:url']),
-            data=json.dumps(data)).json()
-        assert response['status'] == 'success'
+    ts_data = [[1, 2, 3, 4], [32.2, 53.3, 32.3, 32.52], [0.2, 0.3, 0.6, 0.3]]
+    impute_kwargs = {'strategy': 'constant', 'value': None}
+    data = {'datasetID': dataset.id,
+            'ts_names': ['217801'],
+            'modelID': model.id}
+    response = driver.request(
+        'POST', '{}/predictions'.format(cfg['server:url']),
+        data=json.dumps(data)).json()
+    assert response['status'] == 'success'
 
-        n_secs = 0
-        while n_secs < 10:
-            pred_info = driver.request('GET', '{}/predictions/{}'.format(
-                cfg['server:url'], response['data']['id'])).json()
-            if pred_info['status'] == 'success' and pred_info['data']['finished']:
-                assert isinstance(pred_info['data']['results']['217801']
-                                  ['features']['total_time'],
-                                  float)
-                assert 'Mira' in pred_info['data']['results']['217801']['prediction']
-                break
-            n_secs += 1
-            time.sleep(1)
-        else:
-            raise Exception('test_predict_specific_ts_name timed out')
+    for i in range(10):
+        pred_info = driver.request('GET', '{}/predictions/{}'.format(
+            cfg['server:url'], response['data']['id'])).json()
+        if pred_info['status'] == 'success' and pred_info['data']['finished']:
+            assert isinstance(pred_info['data']['results']['217801']
+                              ['features']['total_time'],
+                              float)
+            assert 'Mira' in pred_info['data']['results']['217801']['prediction']
+            break
+        time.sleep(1)
+    else:
+        raise Exception('test_predict_specific_ts_name timed out')
