@@ -175,6 +175,7 @@ class PredictRawDataHandler(BaseHandler):
                                                features_to_use=features_to_use,
                                                meta_features=meta_feats)
         fset = featurize.impute_featureset(fset, **impute_kwargs)
+        fset.index = fset.index.astype(str)  # ensure JSON-encodable
         data = {'preds': model_data.predict(fset)}
         if hasattr(model_data, 'predict_proba'):
             data['pred_probs'] = pd.DataFrame(model_data.predict_proba(fset),
