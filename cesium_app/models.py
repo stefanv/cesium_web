@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import os
 import sys
 import inspect
@@ -19,50 +19,29 @@ from cesium import featurize
 
 # The db has to be initialized later; this is done by the app itself
 # See `app_server.py`
-def connect(user, password, db, host='localhost', port=5432):
-    '''Returns a connection'''
-    # We connect with the help of the PostgreSQL URL
-    # postgresql://federer:grandestslam@localhost:5432/tennis
+def init_db(user, database, password='', host='localhost', port=5432):
     url = 'postgresql://{}:{}@{}:{}/{}'
-    url = url.format(user, password, host, port, db)
+    url = url.format(user, password, host, port, database)
 
-    # The return value of create_engine() is our connection object
     conn = sa.create_engine(url, client_encoding='utf8')
 
+    DBSession.configure(bind=conn)
+    Base.metadata.bind = conn
+
     return conn
+DBSession = scoped_session(sessionmaker())
 
-
-# TODO where does this info live? it's not part of the connection anymore
-from types import SimpleNamespace; db = SimpleNamespace(database='cesium')
-# TODO don't auto-connect
-conn = connect('cesium', '', 'cesium')
-DBSession = scoped_session(sessionmaker(conn))
-session = DBSession()
-from sqlalchemy.exc import ProgrammingError
-for table in ['dataset', 'featureset', 'file', 'model', 'project', 'prediction', 'user']:
-    try:
-        conn.execute(f'ALTER TABLE "{table}" RENAME TO {table}s')
-    except ProgrammingError as e:
-        if "does not exist" not in str(e):
-            raise
-try:
-    conn.execute('ALTER TABLE datasetfile RENAME TO dataset_files')
-except ProgrammingError as e:
-    if "does not exist" not in str(e):
-        raise
-try:
-    conn.execute('ALTER TABLE userproject RENAME TO user_projects')
-except ProgrammingError as e:
-    if "does not exist" not in str(e):
-        raise
 
 class BaseMixin(object):
     query = DBSession.query_property()
     id = sa.Column(sa.Integer, primary_key=True)
+    created = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
 
     @declared_attr
     def __tablename__(cls):
         return cls.__name__.lower() + 's'
+
+    __mapper_args__ = {'confirm_deleted_rows': False}
 
     def __str__(self):
         return to_json(self)
@@ -74,6 +53,10 @@ class BaseMixin(object):
             return (user in self.project.users)
         else:
             raise NotImplementedError(f"{type(self)} object has no owner")
+
+    def to_dict(self):  # TODO iterate over columns instead?
+        return {k: v for k, v in self.__dict__.items()
+                if not k.startswith('_')}
 
     @classmethod
     def get_if_owned_by(cls, ident, user):
@@ -89,14 +72,6 @@ class BaseMixin(object):
 
 
 Base = declarative_base(cls=BaseMixin)
-Base.metadata.bind = conn
-
-
-dataset_files = sa.Table('dataset_files', Base.metadata,
-    sa.Column('dataset_id', sa.ForeignKey('datasets.id', ondelete='CASCADE'),
-              primary_key=True),
-    sa.Column('file_uri', sa.ForeignKey('files.uri', ondelete='CASCADE'),
-              primary_key=True))
 
 
 user_projects = sa.Table('user_projects', Base.metadata,
@@ -108,97 +83,114 @@ user_projects = sa.Table('user_projects', Base.metadata,
 
 class Dataset(Base):
     name = sa.Column(sa.String(), nullable=False)
-    created = sa.Column(sa.DateTime, nullable=False,
-                        default=datetime.datetime.now)
     meta_features = sa.Column(sa.ARRAY(sa.VARCHAR()), nullable=False,
                               default=[], index=True)
     project_id = sa.Column(sa.ForeignKey('projects.id', ondelete='CASCADE'),
                            nullable=False, index=True)
-    project = relationship('Project')
-    files = relationship('File', secondary=dataset_files,
-                         back_populates='datasets')
+    project = relationship('Project', back_populates='datasets')
+    files = relationship('DatasetFile', backref='dataset', cascade='all')
 
     def display_info(self):
-        info = self.__dict__()
-        info['files'] = [os.path.basename(fname)
-                         for fname in self.file_names]
+        info = self.to_dict()
+        info['files'] = [os.path.basename(f.name) for f in self.files]
 
         return info
+
+
+class DatasetFile(Base):
+    dataset_id = sa.Column(sa.ForeignKey('datasets.id', ondelete='CASCADE'),
+                           nullable=False, index=True)
+    uri = sa.Column(sa.String(), nullable=False)
+    name = sa.Column(sa.String(), nullable=False, default=lambda context:
+                     context.current_parameters.get('uri'))
+
+
+# TODO is there a better way to "cascade" this?
+@sa.event.listens_for(Dataset, 'before_delete')
+def remove_dataset_files(mapper, connection, target):
+    for f in target.files:
+        DBSession.delete(f)
 
 
 class Project(Base):
     name = sa.Column(sa.String(), nullable=False)
     description = sa.Column(sa.String())
-    created = sa.Column(sa.DateTime, nullable=False,
-                        default=datetime.datetime.now)
     users = relationship('User', secondary=user_projects,
                          back_populates='projects')
+    datasets = relationship('Dataset', back_populates='project',
+                            cascade='all')
+    featuresets = relationship('Featureset', back_populates='project',
+                               cascade='all')
+    models = relationship('Model', back_populates='project', cascade='all')
+    predictions = relationship('Prediction', back_populates='project',
+                               cascade='all')
 
 
-# TODO: remove files on database delete
-class File(Base):
-    id = None  # no ID field
-    uri = sa.Column(sa.String(), primary_key=True)
-    name = sa.Column(sa.String())
-    created = sa.Column(sa.DateTime, nullable=False, default=datetime.datetime.now)
-    datasets = relationship('Dataset', secondary=dataset_files,
-                            back_populates='files')
+#class File(Base):
+#    id = None  # no ID field
+#    uri = sa.Column(sa.String(), primary_key=True)
+#    name = sa.Column(sa.String(), default=lambda context:
+#                     context.current_parameters.get('uri'))
+#    created = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
+#    datasets = relationship('Dataset', secondary=dataset_files, viewonly=True,
+#                            back_populates='files')
+
+
+# TODO restore this
+#@sa.event.listens_for(File, 'after_delete')
+#def remove_file(mapper, connection, target):
+#    try:
+#        os.remove(target.uri)
+#    except FileNotFoundError:
+#        pass
 
 
 class Featureset(Base):
     project_id = sa.Column(sa.ForeignKey('projects.id', ondelete='CASCADE'),
                            nullable=False, index=True)
+    project = relationship('Project', back_populates='featuresets')
     name = sa.Column(sa.String(), nullable=False)
-    created = sa.Column(sa.DateTime, nullable=False, default=datetime.datetime.now)
     features_list = sa.Column(sa.ARRAY(sa.VARCHAR()), nullable=False, index=True)
     custom_features_script = sa.Column(sa.String())
-    file_uri = sa.Column(sa.ForeignKey('files.uri', ondelete='CASCADE'),
-                        nullable=False, index=True)
+    file_uri = sa.Column(sa.String(), nullable=True, index=True)
     task_id = sa.Column(sa.String())
     finished = sa.Column(sa.DateTime)
 
-    file = relationship('File')
     project = relationship('Project')
 
 
 class Model(Base):
     project_id = sa.Column(sa.ForeignKey('projects.id', ondelete='CASCADE'),
                            nullable=False, index=True)
+    project = relationship('Project', back_populates='models')
     featureset_id = sa.Column(sa.ForeignKey('featuresets.id',
                                             ondelete='CASCADE'),
                               nullable=False, index=True)
     name = sa.Column(sa.String(), nullable=False)
-    created = sa.Column(sa.DateTime, nullable=False,
-                        default=datetime.datetime.now)
     params = sa.Column(sa.JSON, nullable=False, index=False)
     type = sa.Column(sa.String(), nullable=False)
-    file_uri = sa.Column(sa.ForeignKey('files.uri', ondelete='CASCADE'),
-                        nullable=False, index=True)
+    file_uri = sa.Column(sa.String(), nullable=True, index=True)
     task_id = sa.Column(sa.String())
     finished = sa.Column(sa.DateTime)
     train_score = sa.Column(sa.Float)
 
     featureset = relationship('Featureset')
-    file = relationship('File')
     project = relationship('Project')
 
 
 class Prediction(Base):
     project_id = sa.Column(sa.ForeignKey('projects.id', ondelete='CASCADE'),
                            nullable=False, index=True)
+    project = relationship('Project', back_populates='predictions')
     dataset_id = sa.Column(sa.ForeignKey('datasets.id', ondelete='CASCADE'),
                            nullable=False, index=True)
     model_id = sa.Column(sa.ForeignKey('models.id', ondelete='CASCADE'),
                          nullable=False, index=True)
-    created = sa.Column(sa.DateTime, nullable=False,
-                        default=datetime.datetime.now)
-    file_uri = sa.Column(sa.ForeignKey('files.uri', ondelete='CASCADE'),
-                        nullable=False, index=True)
+    file_uri = sa.Column(sa.String(), nullable=True, index=True)
     task_id = sa.Column(sa.String())
     finished = sa.Column(sa.DateTime)
 
     dataset = relationship('Dataset')
-    file = relationship('File')
     model = relationship('Model')
     project = relationship('Project')
 
@@ -220,13 +212,13 @@ class Prediction(Base):
         return result
 
     def display_info(self):
-        info = self.__dict__()
+        info = self.to_dict()
         info['model_type'] = self.model.type
         info['dataset_name'] = self.dataset.name
         info['model_name'] = self.model.name
         info['featureset_name'] = self.model.featureset.name
         if self.task_id is None:
-            fset, data = featurize.load_featureset(self.files.uri)
+            fset, data = featurize.load_featureset(self.file_uri)
             info['isProbabilistic'] = (len(data['pred_probs']) > 0)
             info['results'] = Prediction.format_pred_data(fset, data)
         return info
@@ -236,7 +228,7 @@ class User(Base):
     username = sa.Column(sa.String(), nullable=False, unique=True)
     email = sa.Column(sa.String(), nullable=False, unique=True)
     projects = relationship('Project', secondary=user_projects,
-                            back_populates='users')
+                            back_populates='users', cascade='all')
 
     @classmethod
     def user_model(cls):

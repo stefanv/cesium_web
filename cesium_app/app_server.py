@@ -80,7 +80,7 @@ def make_app(config_files=None, debug=False):
     })  # Specify additional settings here
 
     app = tornado.web.Application(handlers, **settings)
-#    models.db.init(**cfg['database'])  # TODO where to connect?
+    models.init_db(**cfg['database'])
     model_util.create_tables()
     model_util.create_tables(models.app_models)
     app.cfg = cfg

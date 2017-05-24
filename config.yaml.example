@@ -24,7 +24,7 @@ paths:
 
 database:
     database: cesium
-    host:
+    host: localhost
     port: 5432
     user: cesium
     password:
@@ -42,6 +42,6 @@ server:
     # You need to have Google+ API enabled; it takes a few minutes to activate.
 
     auth:
-        debug_login: False
+        debug_login: True
         google_oauth2_key:
         google_oauth2_secret:

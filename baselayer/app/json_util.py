@@ -27,8 +27,7 @@ class Encoder(json.JSONEncoder):
             return o.decode('utf-8')
 
         elif hasattr(o, '__table__'):  # SQLAlchemy model
-            return {c.name: str(getattr(o, c.name))
-                    for c in o.__table__.columns}
+            return o.to_dict()
 
         elif o is int:
             return 'int'

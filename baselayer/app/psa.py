@@ -4,34 +4,46 @@ Python Social Auth: storage and user model definitions
 https://github.com/python-social-auth
 """
 
-from social_sqlalchemy.storage import (
-     BaseStorage,
-    AssociationMixin, CodeMixin,
-    NonceMixin, PartialMixin, UserMixin
-)
-
+from social_sqlalchemy.storage import (SQLAlchemyUserMixin,
+                                       SQLAlchemyAssociationMixin,
+                                       SQLAlchemyNonceMixin,
+                                       SQLAlchemyCodeMixin,
+                                       SQLAlchemyPartialMixin,
+                                       BaseSQLAlchemyStorage)
 from social_core.backends.google import GoogleOAuth2
 
+import sqlalchemy as sa
 from sqlalchemy.orm import relationship
-from .models import Base, User#, db
+from .models import Base, User, DBSession#, db
 
 
 #database_proxy.initialize(db)  # TODO initialize
 
 
-class UserSocialAuth(Base, UserMixin):
+class UserSocialAuth(Base, SQLAlchemyUserMixin):
     """
     This model is used by PSA to store whatever it needs during
     authentication, e.g. token expiration time, etc.
     """
-    user = relationship('User', back_populates='social_auth')
+    uid = sa.Column(sa.String())
+#    user_id = relationship('User', back_populates='social_auth')  # TODO why doesn't this work?
+    # https://github.com/tfruehe2/Millennialsmusic/blob/0aa80b7cc264ad81802225d2b9c557b58cabcdd0/websiteenv/lib/python3.5/site-packages/social/apps/tornado_app/models.py
+    user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'))
+    
+    def username_max_length():  # TODO ?
+        return 255
+
+    @classmethod
+    def _session(cls):
+        return DBSession()
 
     @classmethod
     def user_model(cls):
         return User
+User.user_social_auth = relationship('UserSocialAuth')
 
 
-class TornadoStorage(BaseStorage):
+class TornadoStorage(BaseSQLAlchemyStorage):
     """
     Storage definition for Tornado.
 
@@ -40,19 +52,19 @@ class TornadoStorage(BaseStorage):
     http://python-social-auth.readthedocs.io/en/latest/storage.html#storage-interface
     """
 
-    class nonce(NonceMixin):
+    class nonce(SQLAlchemyNonceMixin):
         """Single use numbers"""
         pass
 
-    class association(AssociationMixin):
+    class association(SQLAlchemyAssociationMixin):
         """OpenId account association"""
         pass
 
-    class code(CodeMixin):
+    class code(SQLAlchemyCodeMixin):
         """Mail validation single one time use code"""
         pass
 
-    class partial(PartialMixin):
+    class partial(SQLAlchemyPartialMixin):
         pass
 
     user = UserSocialAuth

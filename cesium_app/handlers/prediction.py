@@ -1,5 +1,5 @@
 from baselayer.app.handlers.base import BaseHandler, AccessError
-from ..models import DBSession, Prediction, File, Dataset, Model, Project
+from ..models import DBSession, Prediction, Dataset, Model, Project
 from .. import util
 
 import tornado.gen
@@ -25,9 +25,10 @@ class PredictionHandler(BaseHandler):
         try:
             result = yield future._result()
 
+            prediction = DBSession().merge(prediction)
             prediction.task_id = None
             prediction.finished = datetime.datetime.now()
-            prediction.save()
+            DBSession().commit()
 
             self.action('baselayer/SHOW_NOTIFICATION',
                         payload={
@@ -70,7 +71,7 @@ class PredictionHandler(BaseHandler):
 
         pred_path = os.path.abspath(pjoin(self.cfg['paths:predictions_folder'],
                                           '{}_prediction.npz'.format(uuid.uuid4())))
-        prediction = Prediction(file=File(uri=pred_path), dataset=dataset,
+        prediction = Prediction(file_uri=pred_path, dataset=dataset,
                                 project=dataset.project, model=model)
         DBSession().add(prediction)
         DBSession().commit()
@@ -78,12 +79,9 @@ class PredictionHandler(BaseHandler):
         executor = yield self._get_executor()
 
         # If only a subset of the dataset is to be used, get specified files
-        if ts_names:
-            ts_uris = [f.uri for f in dataset.files if os.path.basename(f.name)
-                       in ts_names or os.path.basename(f.name).split('.npz')[0]
-                       in ts_names]
-        else:
-            ts_uris = dataset.uris
+        ts_uris = [f.uri for f in dataset.files if not ts_names
+                   or os.path.basename(f.name) in ts_names
+                   or os.path.basename(f.name).split('.npz')[0] in ts_names]
 
         all_time_series = executor.map(time_series.load, ts_uris)
         all_labels = executor.map(lambda ts: ts.label, all_time_series)
@@ -95,7 +93,7 @@ class PredictionHandler(BaseHandler):
                                     all_features, all_time_series)
         imputed_fset = executor.submit(featurize.impute_featureset,
                                        fset_data, inplace=False)
-        model_or_gridcv = executor.submit(joblib.load, model.file.uri)
+        model_or_gridcv = executor.submit(joblib.load, model.file_uri)
         model_data = executor.submit(lambda model: model.best_estimator_
                                      if hasattr(model, 'best_estimator_') else model,
                                      model_or_gridcv)
@@ -112,7 +110,7 @@ class PredictionHandler(BaseHandler):
                                  pred_probs=pred_probs)
 
         prediction.task_id = future.key
-        prediction.save()
+        DBSession().commit()
 
         loop = tornado.ioloop.IOLoop.current()
         loop.spawn_callback(self._await_prediction, future, prediction)
@@ -123,7 +121,7 @@ class PredictionHandler(BaseHandler):
     def get(self, prediction_id=None, action=None):
         if action == 'download':
             pred_path = Prediction.get_if_owned_by(prediction_id,
-                                                   self.current_user).file.uri
+                                                   self.current_user).file_uri
             fset, data = featurize.load_featureset(pred_path)
             result = pd.DataFrame(({'label': data['labels']}
                                    if len(data['labels']) > 0 else None),
@@ -168,7 +166,7 @@ class PredictRawDataHandler(BaseHandler):
         impute_kwargs = json_decode(self.get_argument('impute_kwargs', '{}'))
 
         model = Model.query.get(model_id)
-        model_data = joblib.load(model.file.uri)
+        model_data = joblib.load(model.file_uri)
         if hasattr(model_data, 'best_estimator_'):
             model_data = model_data.best_estimator_
         features_to_use = model.featureset.features_list

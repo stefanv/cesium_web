@@ -10,7 +10,7 @@ from sqlalchemy.orm.exc import NoResultFound
 # be used to look up the logged in user.
 from social_tornado.handlers import BaseHandler as PSABaseHandler
 
-from ..models import User
+from ..models import DBSession, User
 from ..json_util import to_json
 from ..flow import Flow
 
@@ -45,15 +45,15 @@ class BaseHandler(PSABaseHandler):
                 u = User(username=username, email=username)
                 DBSession.add(u)
                 DBSession().commit()
-
-        user_id = self.get_secure_cookie('user_id')
-        if user_id is None:
-            u = None
         else:
-            try:
-                u = User.query.get(int(user_id))
-            except NoResultFound:
+            user_id = self.get_secure_cookie('user_id')
+            if user_id is None:
                 u = None
+            else:
+                try:
+                    u = User.query.get(user_id)
+                except NoResultFound:
+                    u = None
 
         return u
 
@@ -64,10 +64,9 @@ class BaseHandler(PSABaseHandler):
         return tornado.escape.json_decode(self.request.body)
 
     def on_finish(self):
-        # TODO decide when to connect
-#        if not models.db.is_closed():
-#            models.db.close()
-
+# Instance <Featureset at 0x114e829b0> is not bound to a Session; attribute
+# refresh operation cannot proceed
+        DBSession.remove()  # TODO how to handle this...?
         return super(BaseHandler, self).on_finish()
 
     def error(self, message):

@@ -35,7 +35,7 @@ else:
 
 
 def add_test_yaml():
-    print('Creating {}'.format('_test_config.yaml'))
+    print(f'Creating {TEST_CONFIG}')
 
     from textwrap import dedent
     with open(TEST_CONFIG, 'w') as f:
@@ -63,8 +63,12 @@ if __name__ == '__main__':
     add_test_yaml()
 
     # Initialize the test database connection
-    from cesium_app.tests.conftest import init_db
-    init_db()
+    from cesium_app.models import init_db
+    from cesium_app.app_server import load_config
+    basedir = pathlib.Path(os.path.dirname(__file__))/'..'
+    cfg = load_config([basedir/'cesium.yaml.example',
+                       basedir/TEST_CONFIG])
+    init_db(**cfg['database'])
 
     clear_tables()
     clear_tables(models.app_models)

@@ -9,7 +9,7 @@ ghostdriver.log
 *~
 *.swp
 *.swo
-.DS_Store
+*.DS_Store
 __pycache__/
 node_modules/
 *.pyc

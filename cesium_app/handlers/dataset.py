@@ -1,5 +1,5 @@
-from baselayer.app.handlers.base import BaseHandler
-from ..models import DBSession, Project, Dataset
+from baselayer.app.handlers.base import BaseHandler, AccessError
+from ..models import DBSession, Project, Dataset, DatasetFile
 from .. import util
 
 from cesium import data_management, time_series
@@ -57,11 +57,11 @@ class DatasetHandler(BaseHandler):
                                         str(uuid.uuid4()) + "_" +
                                         util.secure_filename(ts_path))
                            for ts_path in ts_paths]
+        d = Dataset(name=dataset_name, project=p, meta_features=meta_features)
         for old_path, new_path in zip(ts_paths, unique_ts_paths):
             os.rename(old_path, new_path)
-        file_names = [shorten_fname(ts_path) for ts_path in ts_paths]
-        d = Dataset(name=dataset_name, project=p, file_names=file_names,
-                    file_uris=unique_ts_paths, meta_features=meta_features)
+            d.files.append(DatasetFile(name=shorten_fname(old_path),
+                                       uri=new_path))
         DBSession().add(d)
         DBSession().commit()
 

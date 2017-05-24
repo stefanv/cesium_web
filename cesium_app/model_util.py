@@ -3,7 +3,7 @@ import textwrap
 import time
 from contextlib import contextmanager
 
-from cesium_app import models#, psa
+from cesium_app import models, psa
 from cesium_app.json_util import to_json
 
 
@@ -19,9 +19,10 @@ def status(message):
         print(f'\r[✓] {message}')
 
 
-# TODO connect to db
 def drop_tables():
-    print(f'Dropping tables on database "{models.db.database}"')
+    conn = models.DBSession.session_factory.kw['bind']
+    print(f'Dropping tables on database '
+          f'"{str(conn.url).split(":")[1].strip("/")}"')
     models.Base.metadata.drop_all()
 
 
@@ -32,7 +33,9 @@ def create_tables(retry=5):
     """
     for i in range(1, retry + 1):
         try:
-            print(f'Refreshing tables on db "{models.db.database}"')
+            conn = models.DBSession.session_factory.kw['bind']
+            print(f'Creating tables on database '
+                  f'"{str(conn.url).split(":")[1].strip("/")}"')
             models.Base.metadata.create_all()
 
             print('Refreshed tables:')
@@ -82,15 +85,14 @@ def insert_test_data():
         assert len(u.projects) == 3
 
     with status("Inserting dummy dataset and time series... "):
-        files = [models.File(uri=f'/dir/ts{i}.npz') for i in range(3)]
+        files = [models.DatasetFile(uri=f'/dir/ts{i}.npz') for i in range(3)]
         d = models.Dataset(name='test dataset', project=p, files=files)
         models.DBSession().add_all(files + [d])
         models.DBSession().commit()
 
     with status("Inserting dummy featureset... "):
-        test_file = models.File.query[0]
         f = models.Featureset(project=p, name='test featureset',
-                              file=test_file, features_list=['amplitude'])
+                              file_uri='/dir/fset.npz', features_list=['amplitude'])
         models.DBSession().add(f)
         models.DBSession().commit()
 

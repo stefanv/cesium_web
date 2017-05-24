@@ -6,24 +6,20 @@ import pathlib
 import distutils.spawn
 import types
 from baselayer.app.config import Config
-from cesium_app import models
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from seleniumrequests.request import RequestMixin
+from pytest_factoryboy import register
+from cesium_app import models
+from cesium_app.model_util import clear_tables
+from cesium_app.tests.fixtures import (ProjectFactory, DatasetFactory,
+                                       FeaturesetFactory, ModelFactory)
 
 print('Loading test configuration from _test_config.yaml')
 basedir = pathlib.Path(os.path.dirname(__file__))
-cfg = Config([(basedir/'../../config.yaml.example').absolute(),
-              (basedir/'../../_test_config.yaml').absolute()])
-
-def init_db():
-    print('Setting test database to:', cfg['database'])
-    models.db.init(**cfg['database'])
-
-    return cfg
-
-
-init_db()
+cfg = Config([(basedir/'../../cesium.yaml.example').absolute(),
+              (basedir/'../../_cesium_test.yaml').absolute()])
+models.init_db(**cfg['database'])
 
 
 class MyCustomWebDriver(RequestMixin, webdriver.Chrome):
@@ -78,16 +74,17 @@ def driver(request):
     return driver
 
 
-@pytest.fixture(scope='session', autouse=True)
-def remove_test_files(request):
+@pytest.fixture(scope='function', autouse=True)
+def reset_state(request):
     def teardown():
-        for f in models.File.query:
-            try:
-                os.remove(f.file.uri)
-            except:
-                pass
-    try:
-#        models.db.connect()  # TODO when to connect?
-        request.addfinalizer(teardown)
-    except:  # skip teardown if DB not available
-        pass
+#        models.User.query.delete()
+#        models.Project.query.delete()
+#        models.DBSession().commit()
+        models.DBSession().rollback()
+    request.addfinalizer(teardown)
+
+
+register(ProjectFactory)
+register(DatasetFactory)
+register(FeaturesetFactory)
+register(ModelFactory)

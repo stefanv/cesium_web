@@ -5,7 +5,7 @@ from cesium import featurize, time_series
 from cesium.features import dask_feature_graph
 
 from baselayer.app.handlers.base import BaseHandler, AccessError
-from ..models import DBSession, Dataset, Featureset, Project, File
+from ..models import DBSession, Dataset, Featureset, Project
 
 from os.path import join as pjoin
 import uuid
@@ -35,15 +35,17 @@ class FeatureHandler(BaseHandler):
         try:
             result = yield future._result()
 
+            fset = DBSession().merge(fset)
             fset.task_id = None
             fset.finished = datetime.datetime.now()
-            fset.save()
+            DBSession().commit()
 
             self.action('baselayer/SHOW_NOTIFICATION',
                         payload={"note": "Calculation of featureset '{}' completed.".format(fset.name)})
 
         except Exception as e:
-            fset.delete_instance()
+            DBSession().delete(fset)
+            DBSession().commit()
             self.action('baselayer/SHOW_NOTIFICATION',
                         payload={"note": 'Cannot featurize {}: {}'.format(fset.name, e),
                                  "type": 'error'})
@@ -73,7 +75,7 @@ class FeatureHandler(BaseHandler):
                           '{}_featureset.npz'.format(uuid.uuid4()))
 
         fset = Featureset(name=featureset_name,
-                          file=File(uri=fset_path),
+                          file_uri=fset_path,
                           project=dataset.project,
                           features_list=features_to_use,
                           custom_features_script=None)
@@ -81,7 +83,8 @@ class FeatureHandler(BaseHandler):
 
         executor = yield self._get_executor()
 
-        all_time_series = executor.map(time_series.load, dataset.uris)
+        all_time_series = executor.map(time_series.load,
+                                       [f.uri for f in dataset.files])
         all_labels = executor.map(lambda ts: ts.label, all_time_series)
         all_features = executor.map(featurize.featurize_single_ts,
                                     all_time_series,
