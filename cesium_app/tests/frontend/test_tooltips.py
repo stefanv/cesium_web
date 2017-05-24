@@ -3,11 +3,12 @@ from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 import time
 
+
 def test_tab_tooltips(driver, project):
     driver.get('/')
     driver.refresh()
 
-    hover = ActionChains(driver, project).move_to_element(
+    hover = ActionChains(driver).move_to_element(
         driver.find_element_by_id('react-tabs-0'))
     hover.perform()
     time.sleep(0.8)
@@ -15,7 +16,7 @@ def test_tab_tooltips(driver, project):
         "//span[contains(text(),'Manage your projects')]"
     ).is_displayed()
 
-    hover = ActionChains(driver, project).move_to_element(
+    hover = ActionChains(driver).move_to_element(
         driver.find_element_by_id('react-tabs-2'))
     hover.perform()
     time.sleep(0.8)
@@ -23,7 +24,7 @@ def test_tab_tooltips(driver, project):
         "//span[contains(text(),'Upload your time-series data')]"
         ).is_displayed()
 
-    hover = ActionChains(driver, project).move_to_element(
+    hover = ActionChains(driver).move_to_element(
         driver.find_element_by_id('react-tabs-4'))
     hover.perform()
     time.sleep(0.8)
@@ -39,7 +40,7 @@ def test_file_upload_tooltips(driver, project):
     driver.find_element_by_partial_link_text('Upload new dataset').click()
 
     header_file = driver.find_element_by_css_selector('[name=headerFile]')
-    hover = ActionChains(driver, project).move_to_element(header_file)
+    hover = ActionChains(driver).move_to_element(header_file)
     hover.perform()
     time.sleep(0.8)
     assert driver.find_element_by_xpath(
@@ -47,7 +48,7 @@ def test_file_upload_tooltips(driver, project):
     ).is_displayed()
 
     tar_file = driver.find_element_by_css_selector('[name=tarFile]')
-    hover = ActionChains(driver, project).move_to_element(tar_file)
+    hover = ActionChains(driver).move_to_element(tar_file)
     hover.perform()
     time.sleep(0.8)
     assert driver.find_element_by_xpath(
