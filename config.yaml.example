@@ -42,6 +42,6 @@ server:
     # You need to have Google+ API enabled; it takes a few minutes to activate.
 
     auth:
-        debug_login: True
+        debug_login: False
         google_oauth2_key:
         google_oauth2_secret:
