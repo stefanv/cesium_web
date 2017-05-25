@@ -26,9 +26,9 @@ class UserSocialAuth(Base, SQLAlchemyUserMixin):
     authentication, e.g. token expiration time, etc.
     """
     uid = sa.Column(sa.String())
-#    user_id = relationship('User', back_populates='social_auth')  # TODO why doesn't this work?
+    user_id = sa.Column(sa.ForeignKey('users.id', ondelete='CASCADE'))
+    user = relationship('User', backref='social_auth')  # TODO why doesn't this work?
     # https://github.com/tfruehe2/Millennialsmusic/blob/0aa80b7cc264ad81802225d2b9c557b58cabcdd0/websiteenv/lib/python3.5/site-packages/social/apps/tornado_app/models.py
-    user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'))
     
     def username_max_length():  # TODO ?
         return 255
@@ -40,7 +40,6 @@ class UserSocialAuth(Base, SQLAlchemyUserMixin):
     @classmethod
     def user_model(cls):
         return User
-User.user_social_auth = relationship('UserSocialAuth')
 
 
 class TornadoStorage(BaseSQLAlchemyStorage):
