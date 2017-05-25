@@ -9,7 +9,7 @@ import subprocess
 from os.path import join as pjoin
 import time
 import socket
-from tools.supervisor_status import supervisor_status
+from baselayer.tools.supervisor_status import supervisor_status
 try:
     import http.client as http
 except ImportError:

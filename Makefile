@@ -67,10 +67,10 @@ clean:
 	rm $(bundle)
 
 test_headless: paths dependencies
-	PYTHONPATH='.' xvfb-run ./baselayer/tools/test_frontend.py
+	PYTHONPATH='.' xvfb-run ./tools/test_frontend.py
 
 test: paths dependencies
-	PYTHONPATH='.' ./baselayer/tools/test_frontend.py
+	PYTHONPATH='.' ./tools/test_frontend.py
 
 stop:
 	$(SUPERVISORCTL) stop all

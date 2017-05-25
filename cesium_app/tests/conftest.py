@@ -5,7 +5,7 @@ import os
 import pathlib
 import distutils.spawn
 import types
-from cesium_app.config import Config
+from baselayer.app.config import Config
 from cesium_app import models
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException

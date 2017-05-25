@@ -9,7 +9,7 @@ base_dir = os.path.abspath(pjoin(os.path.dirname(__file__), '..'))
 
 def supervisor_status():
     return subprocess.check_output(
-        ['supervisorctl', '-c', 'conf/supervisord_common.conf', 'status'],
+        ['supervisorctl', '-c', 'baselayer/conf/supervisor/common.conf', 'status'],
         cwd=base_dir).split(b'\n')[:-1]
 
 
