@@ -20,6 +20,7 @@ import time
 class BaseHandler(PSABaseHandler):
     def prepare(self):
         self._baselayer_cfg = self.application._baselayer_cfg
+        self.cfg = self.application.cfg
         self.flow = Flow()
 
         # Remove slash prefixes from arguments

@@ -7,8 +7,9 @@ import pathlib
 from baselayer.app.config import Config
 from . import models
 from baselayer.app import model_util
-from baselayer.app import handlers_and_settings
-from baselayer.app import util as baselayer_util
+from baselayer.app.app_server import (handlers as baselayer_handlers,
+                                      settings as baselayer_settings)
+from baselayer.app.config import load_baselayer_config
 
 # This provides `login`, `complete`, and `disconnect` endpoints
 from social_tornado.routes import SOCIAL_AUTH_ROUTES
@@ -42,7 +43,7 @@ def make_app(config_files=None, debug=False):
 
     """
     # Cesium settings
-    cfg = baselayer_util.load_config(config_files)
+    cfg = load_baselayer_config()
 
     if cfg['cookie_secret'] == 'abc01234':
         print('!' * 80)
@@ -58,7 +59,7 @@ def make_app(config_files=None, debug=False):
             except Exception as e:
                 print(e)
 
-    handlers = handlers_and_settings.handlers + [
+    handlers = baselayer_handlers + [
         (r'/project(/.*)?', ProjectHandler),
         (r'/dataset(/.*)?', DatasetHandler),
         (r'/features(/.*)?', FeatureHandler),
@@ -71,7 +72,7 @@ def make_app(config_files=None, debug=False):
         (r'/plot_features/(.*)', PlotFeaturesHandler)
     ]
 
-    settings = handlers_and_settings.settings
+    settings = baselayer_settings
     settings.update({'autoreload': debug})  # Specify additional settings here
 
     app = tornado.web.Application(handlers, **settings)

@@ -7,7 +7,6 @@ import pathlib
 from baselayer.app import Config
 
 
-
 def load_config(config_files=None):
     if config_files is None:
         basedir = pathlib.Path(os.path.dirname(__file__))/'..'

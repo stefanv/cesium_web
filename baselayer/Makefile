@@ -13,7 +13,7 @@ dependencies:
 	@./tools/silent_monitor.py ./tools/check_js_deps.sh
 
 db_init:
-	@./tools/silent_monitor.py ./tools/db_init.sh
+	@./tools/silent_monitor.py ./tools/db_init.py
 
 db_clear:
 	PYTHONPATH=. ./tools/db_clear.py
@@ -40,7 +40,7 @@ run: paths dependencies
 	@echo " - Press Ctrl-C to abort the server"
 	@echo " - Run \`make monitor\` in another terminal to restart services"
 	@echo
-	$(SUPERVISORD) -c conf/supervisord.conf
+	$(SUPERVISORD) -c conf/supervisor/app.conf
 
 monitor:
 	@echo "Entering supervisor control panel."

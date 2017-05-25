@@ -11,8 +11,9 @@ module, app_factory = app_factory.rsplit('.', 1)
 app_factory = getattr(importlib.import_module(module), app_factory)
 
 import tornado.log
-app = app_factory(handlers, settings)
+app = app_factory(debug=True)
 app._baselayer_cfg = cfg
+app.cfg = cfg
 
 app.listen(cfg['app:port'])
 
