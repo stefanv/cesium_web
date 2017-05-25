@@ -36,20 +36,13 @@ def _build_model(proj_id, model_type, driver):
         raise
 
 
-def test_build_model_rfc(driver, project, featureset):
+@pytest.mark.parametrize('featureset__name, model_type',
+                         [('class', 'RandomForestClassifier (fast)'),
+                          ('class', 'LinearSGDClassifier'),
+                          ('regr', 'LinearRegressor')])
+def test_build_model(driver, project, featureset, model_type):
     driver.get('/')
-    _build_model(project.id, 'RandomForestClassifier (fast)', driver)
-
-
-def test_build_model_lsgdc(driver, project, featureset):
-    driver.get('/')
-    _build_model(project.id, 'LinearSGDClassifier', driver)
-
-
-@pytest.mark.parametrize('featureset__name', ['regr'])
-def test_build_model_lr(driver, project, featureset):
-    driver.get('/')
-    _build_model(project.id, 'LinearRegressor', driver)
+    _build_model(project.id, model_type, driver)
 
 
 def test_delete_model(driver, project, featureset, model):

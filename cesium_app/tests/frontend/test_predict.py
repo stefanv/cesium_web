@@ -208,7 +208,6 @@ def test_download_prediction_csv_class_prob(driver, project, dataset,
         os.remove('/tmp/cesium_prediction_results.csv')
 
 
-# TODO dataset?
 @pytest.mark.parametrize('featureset__name, model__type', [('regr', 'LinearRegressor')])
 def test_download_prediction_csv_regr(driver, project, dataset, featureset, model, prediction):
     driver.get('/')
