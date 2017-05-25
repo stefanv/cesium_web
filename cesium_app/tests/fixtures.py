@@ -13,11 +13,12 @@ import shutil
 import datetime
 import joblib
 import pandas as pd
+from tempfile import mkdtemp
 
-#from .conftest import cfg
-import pytest
-from sqlalchemy.orm.exc import ObjectDeletedError, StaleDataError
 import factory
+
+
+TMP_DIR = mkdtemp()
 
 
 class ProjectFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -33,9 +34,6 @@ class ProjectFactory(factory.alchemy.SQLAlchemyModelFactory):
     def set_user(project, create, extracted, **kwargs):
         if not create:
             return
-
-        # TODO what if user doesn't exist yet?
-        project.name += f' {project.id}'  # TODO testing
         project.users = User.query.filter(User.username ==
                                           'testuser@gmail.com').all()
         DBSession().commit()
@@ -64,11 +62,10 @@ class DatasetFactory(factory.alchemy.SQLAlchemyModelFactory):
             header = None
         tarball = pjoin(os.path.dirname(__file__),
                         'data', 'asas_training_subset.tar.gz')
-        # TODO can we use a tmpdir or not?
-        header = shutil.copy2(header, '/tmp') if header else None
-        tarball = shutil.copy2(tarball, '/tmp')
+        header = shutil.copy2(header, TMP_DIR) if header else None
+        tarball = shutil.copy2(tarball, TMP_DIR)
         ts_paths = data_management.parse_and_store_ts_data(
-            tarball, '/tmp', header)
+            tarball, TMP_DIR, header)
         
         dataset.files = [DatasetFile(uri=uri) for uri in ts_paths]
         DBSession().commit()
@@ -98,10 +95,9 @@ class FeaturesetFactory(factory.alchemy.SQLAlchemyModelFactory):
         fset_data, fset_labels = sample_featureset(5, 1,
                                                    featureset.features_list,
                                                    labels)
-        fset_path = pjoin('/tmp', '{}.npz'.format(str(uuid.uuid4())))
+        fset_path = pjoin(TMP_DIR, '{}.npz'.format(str(uuid.uuid4())))
         featurize.save_featureset(fset_data, fset_path, labels=fset_labels)
         featureset.file_uri = fset_path
-        featureset.name += f' {featureset.id}'  # TODO testing
         DBSession().commit()
 
 
@@ -167,7 +163,7 @@ class PredictionFactory(factory.alchemy.SQLAlchemyModelFactory):
                                    columns=model_data.classes_)
                       if hasattr(model_data, 'predict_proba') else [])
         all_classes = model_data.classes_ if hasattr(model_data, 'classes_') else []
-        pred_path = pjoin('/tmp', '{}.npz'.format(str(uuid.uuid4())))
+        pred_path = pjoin(TMP_DIR, '{}.npz'.format(str(uuid.uuid4())))
         featurize.save_featureset(fset_data, pred_path, labels=labels,
                                   preds=preds, pred_probs=pred_probs)
         prediction.file_uri = pred_path

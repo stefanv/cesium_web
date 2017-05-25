@@ -47,7 +47,6 @@ class DatasetHandler(BaseHandler):
             headerfile_path = None
 
         p = Project.query.filter(Project.id == project_id).one()
-        # TODO this should give unique names to the time series files
         ts_paths = data_management.parse_and_store_ts_data(
             zipfile_path,
             self.cfg['paths:ts_data_folder'],

@@ -64,9 +64,7 @@ class BaseHandler(PSABaseHandler):
         return tornado.escape.json_decode(self.request.body)
 
     def on_finish(self):
-# Instance <Featureset at 0x114e829b0> is not bound to a Session; attribute
-# refresh operation cannot proceed
-        DBSession.remove()  # TODO how to handle this...?
+        DBSession.remove()
         return super(BaseHandler, self).on_finish()
 
     def error(self, message):

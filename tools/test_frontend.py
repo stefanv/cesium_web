@@ -20,7 +20,7 @@ from cesium_app import models
 
 try:
     import pytest_randomly
-    RAND_ARGS = '--randomly-seed=1 --randomly-dont-reorganize'
+    RAND_ARGS = '--randomly-seed=1'
 except ImportError:
     RAND_ARGS = ''
 

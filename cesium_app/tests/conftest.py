@@ -6,12 +6,13 @@ import pathlib
 import distutils.spawn
 import types
 from baselayer.app.config import Config
+import shutil
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from seleniumrequests.request import RequestMixin
 from pytest_factoryboy import register
 from cesium_app import models
-from cesium_app.tests.fixtures import (ProjectFactory, DatasetFactory,
+from cesium_app.tests.fixtures import (TMP_DIR, ProjectFactory, DatasetFactory,
                                        FeaturesetFactory, ModelFactory,
                                        PredictionFactory)
 
@@ -77,11 +78,14 @@ def driver(request):
 @pytest.fixture(scope='function', autouse=True)
 def reset_state(request):
     def teardown():
-        # TODO delete or no? leaning towards no
-#        models.User.query.delete()
-#        models.Project.query.delete()
-#        models.DBSession().commit()
         models.DBSession().rollback()
+    request.addfinalizer(teardown)
+
+
+@pytest.fixture(scope='session', autouse=True)
+def delete_temporary_files(request):
+    def teardown():
+        shutil.rmtree(TMP_DIR, ignore_errors=True)
     request.addfinalizer(teardown)
 
 

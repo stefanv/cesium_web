@@ -5,6 +5,8 @@ from selenium.common.exceptions import NoSuchElementException, WebDriverExceptio
 import uuid
 import time
 
+from cesium_app.models import DBSession, Project
+
 
 def test_create_project(driver):
     driver.get("/")
@@ -71,6 +73,8 @@ def test_delete_project(driver, project):
 
 
 def test_main_content_disabled_no_project(driver):
+    Project.query.delete()
+    DBSession.commit()
     driver.refresh()
 
     proj_select = Select(driver.find_element_by_css_selector('[name=project]'))
@@ -78,5 +82,3 @@ def test_main_content_disabled_no_project(driver):
         proj_select.first_selected_option
     except NoSuchElementException:
         pytest.raises(WebDriverException, driver.find_element_by_id('react-tabs-2').click)
-    else:
-        print("This is not a clean database, so cannot test this functionality.")

@@ -17,9 +17,6 @@ from sqlalchemy.orm import relationship
 from .models import Base, User, DBSession#, db
 
 
-#database_proxy.initialize(db)  # TODO initialize
-
-
 class UserSocialAuth(Base, SQLAlchemyUserMixin):
     """
     This model is used by PSA to store whatever it needs during
@@ -27,10 +24,9 @@ class UserSocialAuth(Base, SQLAlchemyUserMixin):
     """
     uid = sa.Column(sa.String())
     user_id = sa.Column(sa.ForeignKey('users.id', ondelete='CASCADE'))
-    user = relationship('User', backref='social_auth')  # TODO why doesn't this work?
-    # https://github.com/tfruehe2/Millennialsmusic/blob/0aa80b7cc264ad81802225d2b9c557b58cabcdd0/websiteenv/lib/python3.5/site-packages/social/apps/tornado_app/models.py
+    user = relationship('User', backref='social_auth')
     
-    def username_max_length():  # TODO ?
+    def username_max_length():
         return 255
 
     @classmethod
