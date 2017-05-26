@@ -53,7 +53,7 @@ attach:
 	$(SUPERVISORCTL) fg app
 
 testrun: paths dependencies
-	$(SUPERVISORD) -c baselayer/conf/supervisord_testing.conf
+	$(SUPERVISORD) -c baselayer/conf/supervisor/testing.conf
 
 debug:
 	@echo "Starting web service in debug mode"
