@@ -43,7 +43,7 @@ def make_app(config_files=None, debug=False):
 
     """
     # Cesium settings
-    cfg = load_baselayer_config()
+    cfg = load_baselayer_config(config_files)
 
     if cfg['cookie_secret'] == 'abc01234':
         print('!' * 80)

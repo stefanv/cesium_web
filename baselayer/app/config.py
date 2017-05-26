@@ -13,10 +13,6 @@ class Config(dict):
 
     def update_from(self, filename):
         """Update configuration from YAML file"""
-        try:
-            os.path.isfile(filename)
-        except:
-            print(type(filename), filename)
         if os.path.isfile(filename):
             more_cfg = yaml.load(open(filename))
             dict.update(self, more_cfg)
@@ -50,20 +46,20 @@ class Config(dict):
         print("=" * 78)
 
 
-def load_baselayer_config(config_files=glob.glob('*.yaml*')):
+def load_baselayer_config(config_files=None):
     basedir = pathlib.Path(os.path.dirname(__file__))/'..'
     baselayer_config_files = [basedir/'baselayer.yaml.example',
                               basedir/'baselayer.yaml']
     baselayer_config_files = [os.path.abspath(c.absolute()) for c in
                               baselayer_config_files]
 
-    config_files = baselayer_config_files + [os.path.abspath(c) for c in
-                                             config_files]
+    parent_app_config_files = glob.glob('*.yaml*')
+
+    config_files = (baselayer_config_files + parent_app_config_files +
+                    ([os.path.abspath(c) for c in config_files] if config_files
+                     is not None else []))
 
     cfg = Config(config_files)
-
-    print("*"*70)
-    print("cfg:", cfg)
 
     return cfg
 
