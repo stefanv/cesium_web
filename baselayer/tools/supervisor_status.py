@@ -5,12 +5,13 @@ import os
 import sys
 from os.path import join as pjoin
 
-base_dir = os.path.abspath(pjoin(os.path.dirname(__file__), '..'))
+base_dir = os.path.abspath(pjoin(os.path.dirname(__file__), '../..'))
 
 def supervisor_status():
-    return subprocess.check_output(
-        ['supervisorctl', '-c', 'baselayer/conf/supervisor/common.conf', 'status'],
-        cwd=base_dir).split(b'\n')[:-1]
+    result = subprocess.run('supervisorctl -c baselayer/conf/supervisor/common.conf status',
+                            shell=True, cwd=base_dir, check=True,
+                            stdout=subprocess.PIPE)
+    return result.stdout.split(b'\n')[:-1]
 
 
 if __name__ == '__main__':
