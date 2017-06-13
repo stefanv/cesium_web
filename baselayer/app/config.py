@@ -1,6 +1,6 @@
 import yaml
 import os
-import pathlib
+from pathlib import Path
 import glob
 
 
@@ -47,17 +47,18 @@ class Config(dict):
 
 
 def load_config(config_files=None):
-    basedir = pathlib.Path(os.path.dirname(__file__))/'..'
-    baselayer_config_files = [basedir/'baselayer.yaml.example',
-                              basedir/'baselayer.yaml']
-    baselayer_config_files = [os.path.abspath(c.absolute()) for c in
-                              baselayer_config_files]
+    basedir = Path(os.path.dirname(__file__))/'..'
 
-    parent_app_config_files = glob.glob('*.yaml*')
+    if config_files is None:
+        config_files = [Path(basedir/'config.yaml'),
+                        Path(basedir/'../config.yaml')]
 
-    config_files = (baselayer_config_files + parent_app_config_files +
-                    ([os.path.abspath(c) for c in config_files] if config_files
-                     is not None else []))
+    # Always load the default configuration values first, and override
+    # with values in user configuration files
+    config_files = [Path(basedir/'config.yaml.example'),
+                    Path(basedir/'../config.yaml.example')] + config_files
+
+    config_files = [os.path.abspath(Path(c).absolute()) for c in config_files]
 
     cfg = Config(config_files)
 
