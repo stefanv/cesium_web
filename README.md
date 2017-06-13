@@ -64,7 +64,7 @@ database already existing.  Ignore those.
 
 ## Configuration
 
-Copy `cesium.yaml.example` to `cesium.yaml` and customize.
+Copy `config.yaml.example` to `config.yaml` and customize.
 
 - Under `server`, set 'multi_user' to True to enable logins.  Also provide the
   Google credentials, obtained as described in the config file.

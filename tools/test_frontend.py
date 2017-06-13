@@ -24,7 +24,7 @@ try:
 except ImportError:
     RAND_ARGS = ''
 
-TEST_CONFIG = '_cesium_test.yaml'
+TEST_CONFIG = '_test_config.yaml'
 
 
 base_dir = os.path.abspath(pjoin(os.path.dirname(__file__), '..'))
@@ -35,7 +35,7 @@ else:
 
 
 def add_test_yaml():
-    print('Creating {}'.format('_cesium_test.yaml'))
+    print('Creating {}'.format('_test_config.yaml'))
 
     from textwrap import dedent
     with open(TEST_CONFIG, 'w') as f:

@@ -11,10 +11,10 @@ from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from seleniumrequests.request import RequestMixin
 
-print('Loading test configuration from _cesium_test.yaml')
+print('Loading test configuration from _test_config.yaml')
 basedir = pathlib.Path(os.path.dirname(__file__))
-cfg = Config([(basedir/'../../cesium.yaml.example').absolute(),
-              (basedir/'../../_cesium_test.yaml').absolute()])
+cfg = Config([(basedir/'../../config.yaml.example').absolute(),
+              (basedir/'../../_test_config.yaml').absolute()])
 
 def init_db():
     print('Setting test database to:', cfg['database'])

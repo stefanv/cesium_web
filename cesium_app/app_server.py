@@ -35,7 +35,7 @@ def make_app(config_files=None, debug=False):
     ----------
     config_files : list of str
         Filenames of configuration files, loaded in the order specified.
-        By default, 'cesium.yaml.example' is used for defaults and 'cesium.yaml'
+        By default, 'config.yaml.example' is used for defaults and 'config.yaml'
         for further customizations.
     debug : bool
         Whether or not to start the app in debug mode.  In debug mode,
