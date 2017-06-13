@@ -22,7 +22,7 @@ settings = {
     'login_url': '/',
 
     # Python Social Auth configuration
-    'SOCIAL_AUTH_USER_MODEL': 'cesium_app.models.User',
+    'SOCIAL_AUTH_USER_MODEL': 'baselayer.app.models.User',
     'SOCIAL_AUTH_STORAGE': 'baselayer.app.psa.TornadoPeeweeStorage',
     'SOCIAL_AUTH_STRATEGY': 'social_tornado.strategy.TornadoStrategy',
     'SOCIAL_AUTH_AUTHENTICATION_BACKENDS': (
