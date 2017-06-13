@@ -1,3 +1,3 @@
-from .config import load_baselayer_config, Config
+from .config import load_config, Config
 
-cfg = load_baselayer_config()
+cfg = load_config()

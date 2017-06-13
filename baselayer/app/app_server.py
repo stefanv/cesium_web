@@ -10,8 +10,8 @@ from .handlers import (
     LogoutHandler
 )
 
-from .config import load_baselayer_config
-cfg = load_baselayer_config()
+from .config import load_config
+cfg = load_config()
 
 
 # Tornado settings

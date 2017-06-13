@@ -7,20 +7,6 @@ import pathlib
 from baselayer.app import Config
 
 
-def load_config(config_files=None):
-    if config_files is None:
-        basedir = pathlib.Path(os.path.dirname(__file__))/'..'
-        config_files = (basedir/'example_app.yaml.example', basedir/'example_app.yaml')
-        config_files = (c.absolute() for c in config_files)
-
-    cfg = Config(config_files)
-
-    return cfg
-
-
-cfg = load_config()
-
-
 def make_app(handlers, settings):
     """Create and return a `tornado.web.Application` object with specified
     handlers and settings.

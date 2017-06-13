@@ -46,7 +46,7 @@ class Config(dict):
         print("=" * 78)
 
 
-def load_baselayer_config(config_files=None):
+def load_config(config_files=None):
     basedir = pathlib.Path(os.path.dirname(__file__))/'..'
     baselayer_config_files = [basedir/'baselayer.yaml.example',
                               basedir/'baselayer.yaml']

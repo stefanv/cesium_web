@@ -9,7 +9,7 @@ from . import models
 from baselayer.app import model_util
 from baselayer.app.app_server import (handlers as baselayer_handlers,
                                       settings as baselayer_settings)
-from baselayer.app.config import load_baselayer_config
+from baselayer.app.config import load_config
 
 # This provides `login`, `complete`, and `disconnect` endpoints
 from social_tornado.routes import SOCIAL_AUTH_ROUTES
@@ -43,7 +43,7 @@ def make_app(config_files=None, debug=False):
 
     """
     # Cesium settings
-    cfg = load_baselayer_config(config_files)
+    cfg = load_config(config_files)
 
     if cfg['cookie_secret'] == 'abc01234':
         print('!' * 80)
