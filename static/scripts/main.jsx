@@ -8,8 +8,8 @@ import 'bootstrap';
 
 import configureStore from './configureStore';
 import * as Action from './actions';
-import WebSocket from './WebSocket';
-import MessageHandler from './MessageHandler';
+import WebSocket from 'baselayer/WebSocket';
+import CesiumMessageHandler from './CesiumMessageHandler';
 import { ProjectSelector, AddProject, ProjectTab } from './Projects';
 import DatasetsTab from './Datasets';
 import FeaturesTab from './Features';
@@ -29,7 +29,7 @@ const cs = colorScheme;
 
 const store = configureStore();
 
-const messageHandler = (new MessageHandler(store.dispatch)).handle;
+const messageHandler = CesiumMessageHandler(store.dispatch);
 
 
 class MainContent extends React.Component {

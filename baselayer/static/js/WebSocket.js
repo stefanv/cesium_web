@@ -2,6 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { createCookie, readCookie, eraseCookie } from './cookies';
 import ReconnectingWebSocket from './reconnecting-websocket';
+import MessageHandler from './MessageHandler';
 import { showNotification, hideNotificationByTag, MS_PER_YEAR } from './Notifications';
 
 
@@ -124,7 +125,7 @@ class WebSocket extends React.Component {
           this.props.dispatch(hideNotificationByTag(tag));
           break;
         default:
-          this.props.messageHandler(data);
+          this.props.messageHandler.handle(data);
       }
     };
 
@@ -180,7 +181,7 @@ class WebSocket extends React.Component {
 WebSocket.propTypes = {
   url: React.PropTypes.string.isRequired,
   auth_url: React.PropTypes.string.isRequired,
-  messageHandler: React.PropTypes.func.isRequired
+  messageHandler: React.PropTypes.instanceOf(MessageHandler)
 };
 
 module.exports = WebSocket;
