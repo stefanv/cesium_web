@@ -5,12 +5,12 @@ import ReactTabs from 'react-tabs';
 
 import { FormComponent, Form, TextInput, TextareaInput, SubmitButton,
          CheckBoxInput, SelectInput } from './Form';
-import * as Validate from './validate';
+import * as Validate from '../validate';
 import Expand from './Expand';
-import * as Action from './actions';
+import * as Action from '../actions';
 import Plot from './Plot';
 import FoldableRow from './FoldableRow';
-import { reformatDatetime, contains } from './utils';
+import { reformatDatetime, contains } from '../utils';
 import Delete from './Delete';
 
 const Tab = ReactTabs.Tab;

@@ -2,7 +2,7 @@ import { combineReducers } from 'redux';
 import { reducer as formReducer } from 'redux-form';
 
 import * as Action from './actions';
-import { reducer as notifications } from './Notifications';
+import { reducer as notifications } from 'baselayer/components/Notifications';
 import { contains, joinObjectValues } from './utils';
 
 

@@ -49,7 +49,7 @@ export const CLICK_FEATURE_TAG_CHECKBOX = 'cesium/CLICK_FEATURE_TAG_CHECKBOX';
 export const FETCH_USER_PROFILE = 'cesium/FETCH_USER_PROFILE';
 export const RECEIVE_USER_PROFILE = 'cesium/FETCH_USER_PROFILE';
 
-import { showNotification, reduceNotifications } from './Notifications';
+import { showNotification, reduceNotifications } from 'baselayer/components/Notifications';
 import promiseAction from './action_tools';
 import { objectType } from './utils';
 

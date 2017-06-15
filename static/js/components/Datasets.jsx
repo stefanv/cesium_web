@@ -3,11 +3,11 @@ import { connect } from "react-redux";
 import { reduxForm } from 'redux-form';
 
 import { FormComponent, Form, TextInput, FileInput, SubmitButton } from './Form';
-import * as Validate from './validate';
+import * as Validate from '../validate';
 import Expand from './Expand';
 import Delete from './Delete';
-import * as Action from './actions';
-import { reformatDatetime } from './utils';
+import * as Action from '../actions';
+import { reformatDatetime } from '../utils';
 import CesiumTooltip from './Tooltip';
 import FoldableRow from './FoldableRow';
 

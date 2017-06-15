@@ -5,11 +5,11 @@ import { reduxForm } from 'redux-form';
 import { FormComponent, SelectInput, SubmitButton,
          Form } from './Form';
 
-import * as Validate from './validate';
+import * as Validate from '../validate';
 
 import Expand from './Expand';
-import * as Action from './actions';
-import { contains, reformatDatetime } from './utils';
+import * as Action from '../actions';
+import { contains, reformatDatetime } from '../utils';
 import FoldableRow from './FoldableRow';
 import Delete from './Delete';
 

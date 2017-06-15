@@ -3,9 +3,9 @@ import { connect } from 'react-redux';
 import { reduxForm } from 'redux-form';
 
 import { FormComponent, Form, SelectInput, TextInput, SubmitButton } from './Form';
-import * as Validate from './validate';
+import * as Validate from '../validate';
 import Expand from './Expand';
-import * as Action from './actions';
+import * as Action from '../actions';
 import Delete from './Delete';
 import colorScheme from './colorscheme';
 

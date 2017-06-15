@@ -4,7 +4,7 @@ const path = require('path');
 const config = {
   entry: {
       // Add one entry per main HTML page
-      exampleMainPage: './example_app/static/js/main.jsx'
+      exampleMainPage: './example_app/static/js/components/Main.jsx'
   }
 
   output: {

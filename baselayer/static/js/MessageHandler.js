@@ -1,4 +1,4 @@
-import { SHOW_NOTIFICATION, showNotification } from './Notifications';
+import { SHOW_NOTIFICATION, showNotification } from './components/Notifications';
 
 class MessageHandler {
   constructor(dispatch, handler) {

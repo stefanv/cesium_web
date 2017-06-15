@@ -105,12 +105,12 @@ class ModelHandler(BaseHandler):
             model.params.update(best_params)
             model.save()
 
-            self.action('cesium/SHOW_NOTIFICATION',
+            self.action('baselayer/SHOW_NOTIFICATION',
                         payload={"note": "Model '{}' computed.".format(model.name)})
 
         except Exception as e:
             model.delete_instance()
-            self.action('cesium/SHOW_NOTIFICATION',
+            self.action('baselayer/SHOW_NOTIFICATION',
                         payload={"note": "Cannot create model '{}': {}".format(model.name, e),
                                  "type": 'error'})
             print('Error creating model:', type(e), e)

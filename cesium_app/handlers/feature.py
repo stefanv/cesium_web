@@ -49,12 +49,12 @@ class FeatureHandler(BaseHandler):
             fset.finished = datetime.datetime.now()
             fset.save()
 
-            self.action('cesium/SHOW_NOTIFICATION',
+            self.action('baselayer/SHOW_NOTIFICATION',
                         payload={"note": "Calculation of featureset '{}' completed.".format(fset.name)})
 
         except Exception as e:
             fset.delete_instance()
-            self.action('cesium/SHOW_NOTIFICATION',
+            self.action('baselayer/SHOW_NOTIFICATION',
                         payload={"note": 'Cannot featurize {}: {}'.format(fset.name, e),
                                  "type": 'error'})
             print('Error featurizing:', type(e), e)

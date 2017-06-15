@@ -40,7 +40,7 @@ class PredictionHandler(BaseHandler):
             prediction.finished = datetime.datetime.now()
             prediction.save()
 
-            self.action('cesium/SHOW_NOTIFICATION',
+            self.action('baselayer/SHOW_NOTIFICATION',
                         payload={
                             "note": "Prediction '{}/{}' completed.".format(
                                 prediction.dataset.name,
@@ -49,7 +49,7 @@ class PredictionHandler(BaseHandler):
 
         except Exception as e:
             prediction.delete_instance()
-            self.action('cesium/SHOW_NOTIFICATION',
+            self.action('baselayer/SHOW_NOTIFICATION',
                         payload={
                             "note": "Prediction '{}/{}'" " failed "
                             "with error {}. Please try again.".format(

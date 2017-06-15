@@ -1,8 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { createCookie, readCookie, eraseCookie } from './cookies';
-import ReconnectingWebSocket from './reconnecting-websocket';
-import MessageHandler from './MessageHandler';
+import { createCookie, readCookie, eraseCookie } from '../cookies';
+import ReconnectingWebSocket from '../reconnecting-websocket';
+import MessageHandler from '../MessageHandler';
 import { showNotification, hideNotificationByTag, MS_PER_YEAR } from './Notifications';
 
 

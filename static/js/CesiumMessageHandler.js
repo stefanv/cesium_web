@@ -1,5 +1,5 @@
 import * as Action from './actions';
-import { SHOW_NOTIFICATION, showNotification } from 'baselayer/Notifications';
+import { SHOW_NOTIFICATION, showNotification } from 'baselayer/components/Notifications';
 import MessageHandler from 'baselayer/MessageHandler';
 
 let CesiumMessageHandler = dispatch => {
